@@ -56,7 +56,7 @@ function loadExternalResource(url, type) {
   // 配置选项的具体用法见 README.md
   initWidget({
     waifuPath: live2d_path + 'waifu-tips.json',
-    // cdnPath: 'https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/',
+    cdnPath: 'https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/',
     cubism2Path: live2d_path + 'live2d.min.js',
     cubism5Path: 'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js',
     tools: ['hitokoto', 'asteroids', 'switch-model', 'switch-texture', 'photo', 'info', 'quit'],
@@ -83,6 +83,6 @@ console.log(`\n%cLive2D%cWidget%c\n`, 'padding: 8px; background: #cd3e45; font-w
             kヽ>､ﾊ    _,.ﾍ､    /､!
             !'〈//｀Ｔ´', ＼ ｀'7'ｰr'
             ﾚ'ヽL__|___i,___,ンﾚ|ノ
-                ﾄ-,/  |___./
+                ﾄ-,/  |___../
                 'ｰ'    !_,.:
 */
