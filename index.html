@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神🍐国工 闽越王 | 个人介绍网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #eb2525;
+            --primary-dark: #1d4ed8;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-alt: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: url('bg.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            background: rgba(255, 255, 255, 0.88);
+            border-radius: 0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            padding: 60px 0 40px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: 600;
+            overflow: hidden;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .tagline {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-alt);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 18px;
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* About Section */
+        .section {
+            padding: 48px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .about-text {
+            color: var(--text-light);
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        /* Career */
+        .career-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .career-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .career-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .career-content h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .career-content .company {
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .career-content .period {
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        /* Blog Posts */
+        .post-card {
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-alt);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .post-card:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ===== 第一篇：9 月 21 日 ===== */
+        .post-card-bg1::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg1.jpg') no-repeat center center;
+            background-size: cover;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        .post-card-bg1::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.78);
+            z-index: 1;
+        }
+
+        .post-card-bg1 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== 第二篇：9 月 18 日 ===== */
+        .post-card-bg2::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg2.jpg') no-repeat center center;
+            background-size: cover;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        .post-card-bg2::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.78);
+            z-index: 1;
+        }
+
+        .post-card-bg2 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== 第三篇：9 月 15 日 ===== */
+        .post-card-bg3::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg3.jpg') no-repeat center center;
+            background-size: cover;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        .post-card-bg3::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.78);
+            z-index: 1;
+        }
+
+        .post-card-bg3 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== 第四篇：9 月 11 日 ===== */
+        .post-card-bg4::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg4.webp') no-repeat center center;
+            background-size: cover;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        .post-card-bg4::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.78);
+            z-index: 1;
+        }
+
+        .post-card-bg4 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .post-date {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .post-excerpt {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .post-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            background: white;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+        }
+
+        /* Contact */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-alt);
+            border-radius: 8px;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .contact-info span {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .contact-info a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-info a:hover {
+            color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            header {
+                padding: 40px 0 32px;
+            }
+
+            .avatar {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .section {
+                padding: 32px 0;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* =========================================
+           点击猫咪向上飘
+           ========================================= */
+        .cat-float {
+            position: fixed;
+            left: 0;
+            top: 0;
+            line-height: 1;
+            pointer-events: none;
+            z-index: 9999;
+            will-change: transform, opacity;
+            animation: catFloatUp var(--dur) cubic-bezier(.22, .61, .36, 1) forwards;
+        }
+
+        @keyframes catFloatUp {
+            from {
+                transform: translate(-50%, -50%) translate(0, 0) scale(var(--s)) rotate(0deg);
+                opacity: 0;
+            }
+            15% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(var(--s)) rotate(var(--rot));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="avatar">
+                <img src="minyuewang.jpg" alt="头像" class="avatar-img">
+            </div>
+            <h1>沈理国工 闽越王</h1>
+            <p class="tagline">一条沈理国工<B>计科</B>蛆😭</p>
+            <div class="social-links">
+                <a href="https://github.com/SHUIZHILANLL" title="GitHub">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                </a>
+                <a href="https://x.com/SHuizilan" title="X">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        <!-- About Section -->
+        <section class="section">
+            <h2 class="section-title">关于我</h2>
+            <p class="about-text">
+                我是谁？我不知道。但我知道我饿了🤤<S>(等一等会有看板娘出来)</S>
+            </p>
+        </section>
+
+        <!-- Career Section -->
+        <section class="section">
+            <h2 class="section-title">我的成就😤↗️</h2>
+            <div class="career-item">
+                <div class="career-dot"></div>
+                <div class="career-content">
+                    <h3>周刊2006年年度风云人物😏</h3>
+                </div>
+            </div>
+            <div class="career-item">
+                <div class="career-dot"></div>
+                <div class="career-content">
+                    <h3>2008年感动中国年度人物特别奖🧐</h3>
+                </div>
+            </div>
+            <div class="career-item">
+                <div class="career-dot"></div>
+                <div class="career-content">
+                    <h3>2022年国际奥林匹克奖杯🤫</h3>
+                </div>
+            </div>
+            <div class="career-item">
+                <div class="career-dot"></div>
+                <div class="career-content">
+                    <h3>2019年地球卫士联合获奖人🤭</h3>
+                    <h4>什么？你说这些每个人都有？</h4>
+                    <p><s>别骂了，我是废物😭😭😭</s></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Posts Section -->
+        <section class="section">
+            <h2 class="section-title">最新动向 干了什么我🤖</h2>
+
+            <article class="post-card post-card-bg1">
+                <p class="post-date">2026 年 9 月 21 日</p>
+                <h3 class="post-title">探讨了<B>情侣</B>间的俏皮互动深度解析</h3>
+                <p class="post-excerpt">
+                    通过观看指定视频探讨了<B>情侣</B>间的俏皮互动和共同玩乐如何增进感情。视频指出，一起跳舞、打闹等轻松愉快的活动，可以激发大脑的奖励系统，促进多巴胺和催产素（“ bonding hormone”）的释放。这些化学物质有助于减轻压力、强化积极情绪，从而加深<B>情侣</B>间的情感连接，并创造出值得回忆的甜蜜瞬间。
+                </p>
+                <div class="post-tags">
+                    <span class="tag">视频</span>
+                    <span class="tag">情侣互动</span>
+                </div>
+            </article>
+
+            <article class="post-card post-card-bg2">
+                <p class="post-date">2026 年 9 月 18 日</p>
+                <h3 class="post-title">深度探讨坏猫学长所代表的<B>男娘</B>文化</h3>
+                <p class="post-excerpt">
+                    首先按xp来分析，<B>男娘</B>的本质是穿着打扮带有女性风格的男性，与扶她正好相反，其次是异装癖，加上<B>男娘</B>普遍居于年轻化，有正太的标签，很容易联想到神父。所以喜欢<B>男娘</B>绝大多数是喜欢其女性特征以及带有的性别反差，异装癖，可能还有一些联通成分和喜欢后位。而gay则不同，其不同于<B>男娘</B>中的伪娘，而是BL那种耽美甚至更偏重口的领土。举个例子来说，就像带了兽耳发箍和尾巴的兽娘，以及带有大部分动物化特征的半furry和完全体furry，兽娘本质是女性元素占大多数，兽耳等只是衬托可爱的一些次要元素，所以带兽耳尾巴不算furry，因为元素的重点不一样。总结，所以喜欢<B>男娘</B>并不是gay，正宗的gay反而不喜欢太浓厚的女性元素。
+                </p>
+                <div class="post-tags">
+                    <span class="tag">坏猫学长</span>
+                    <span class="tag">男娘</span>
+                    <span class="tag">兽娘</span>
+                </div>
+            </article>
+
+            <article class="post-card post-card-bg3">
+                <p class="post-date">2026 年 9 月 15 日</p>
+                <h3 class="post-title">深度探讨《<B>原神</B>》与《鸣潮》与《哪吒2》</h3>
+                <p class="post-excerpt">
+                    近日，网络上对于<B>原神</B>的恶评此起彼浮，对此，大伟哥不禁潸然泪下，回顾<B>原神</B>自2020年9月28日开服至今，<B>原神</B>已将近陪伴了五年时光，但新兴势力鸣潮却打着“抗米援潮的、原末鸣初”的口号，妄图将<B>原神</B>推下神坛，对此，各位旅行者不妨，深度探讨下《<B>原神</B>》与《鸣潮》。
+                    对于<B>原神</B>黑子，众多角色表达了不同的看法，问温和评书的钟离大发雷霆，喊出了那句：“天动万象，沉稳的语气反映出<B>原神</B>黑子的浮躁；风色诗人巴巴托斯也说：“别想逃开呦！"吸走了<B>原神</B>黑子们的锐气；就连血狼破军也发言："<B>原神</B>黑子鉴定为超小杯，哈哈大笑”。雷之国的天皇雷电影也掏出了薙刀：“中此刻寂灭之时！”，二命雷神的愿力让<B>原神</B>黑子无地自容。智慧之神的西妲平静地说：“知识，与你分享”，将元素发应的奥秘分享给世人。芙宁娜快步上前，大喊道："欢唱，以我之名。”欢讼起<B>原神</B>的美德。玛薇卡踩着摩托驰来，喊道：“聆听太阳的轰鸣！！”用数值诠释了<B>原神</B>在中国游戏界的王霸地位从来生死都看淡，专和老天对着干，我命由我不由天，小爷成魔不成仙的哪吒的话语震碎了<B>原神</B>黑子的尊严，"天雷滚滚我好怕怕，劈得我浑身掉渣渣，突破天劫我笑哈哈，逆天改命我吹喇叭，滴答滴答滴滴答！”哪吒的RAP击破了<B>原神</B>黑子的弱点，"去你的鸟命，我命由我不由天！是魔是仙，我自己说了才算！”哪吒的话令<B>原神</B>黑子认识到了自己的悲哀。申公豹平静地说道：“人心中的成见是座大山”，<B>原神</B>黑子们对<B>原神</B>的成见更是在背雪山！！
+                </p>
+                <div class="post-tags">
+                    <span class="tag">原神</span>
+                    <span class="tag">黑子</span>
+                </div>
+            </article>
+
+            <article class="post-card post-card-bg4">
+                <p class="post-date">2026 年 9 月 11 日</p>
+                <h3 class="post-title">炮轰galgame——日本帝国主义的阴谋</h3>
+                <p class="post-excerpt">
+                    <B>galgame</B>是日本帝国主义用来毒害洗脑我华夏青少年，进而实现中国新一代沉浸于美少女恋爱幻想，打造一批不婚主义者，最终使中国人口彻底老龄化以瓦解中国战斗力的反动大毒草！
+                    同时，它也是日本资本主义统治者麻痹本国人民，让其沉迷于小资产阶级美少女恋爱情调，进而忽略现实一切事物，从而达到遏制阶级斗争，保障自己统治的工具！
+                    而本人作为一名坚定的无产阶级战士，将批判性游玩日本帝国主义游戏《壳之少女》与《常轨脱离Creative》等三十余部，看看这种资产阶级反动派作品是如何毒害世界人民的！
+                </p>
+                <div class="post-tags">
+                    <span class="tag">galgame</span>
+                    <span class="tag">资产阶级反动派作品</span>
+                </div>
+            </article>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="section">
+            <h2 class="section-title">联系我😈</h2>
+            <h4><U>真的有人会加吗？</U>＞﹏＜</h4>
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-info">
+                        <span>QQ邮箱</span>
+                        <a href="https://mail.qq.com/">3645550593@qq.com</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-info">
+                        <span>位置</span>
+                        <a href="https://baike.baidu.com/item/%E5%A5%89%E5%A4%A9/12001304">奉天, 中国</a>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-info">
+                        <span>网站</span>
+                        <a href="https://www.yuanshen.com/">http://127.0.0.1:5500/（<I>你们打得开吗🤭</I>）</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <p>© 2026 闽越王. 为沈理计协任务所构建</p>
+            <s>哦吼吼吼吼吼吼吼❤️💕</s>
+            <p style="margin-top: 8px;"></p>
+        </footer>
+    </div>
+
+    <script src="https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js"></script>
+
+ 
+    <script>
+    (function () {
+        const CATS = ['🐱', '😺', '😸', '😻', '😽', '🙀', '😹', '😼'];
+        let lastSpawn = 0;
+
+        function spawnCat(x, y) {
+            const el = document.createElement('span');
+            el.className = 'cat-float';
+            el.textContent = CATS[Math.floor(Math.random() * CATS.length)];
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+
+            // —— 方向统一向上 ——
+            const rise = 180 + Math.random() * 260;      
+            const drift = (Math.random() - 0.5) * 160;   
+            // —— 其余保持随机 ——
+            const dur = 1.4 + Math.random() * 1.2;       
+            const scale = 0.7 + Math.random() * 0.9;     
+            const rot = (Math.random() - 0.5) * 60;      
+            const size = 22 + Math.random() * 26;        
+
+            el.style.fontSize = size + 'px';
+            el.style.setProperty('--dx', drift + 'px');
+            el.style.setProperty('--dy', -rise + 'px');  
+            el.style.setProperty('--dur', dur + 's');
+            el.style.setProperty('--s', scale);
+            el.style.setProperty('--rot', rot + 'deg');
+
+            document.body.appendChild(el);
+            el.addEventListener('animationend', () => el.remove());
+        }
+
+        document.addEventListener('pointerdown', function (e) {
+           
+            if (e.target.closest('a, button, input, textarea, select')) return;
+
+       
+            const now = Date.now();
+            if (now - lastSpawn < 40) return;
+            lastSpawn = now;
+
+            spawnCat(e.clientX, e.clientY);
+
+        
+            const extra = 2 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < extra; i++) {
+                setTimeout(function () {
+                    spawnCat(
+                        e.clientX + (Math.random() - 0.5) * 70,
+                        e.clientY + (Math.random() - 0.5) * 30
+                    );
+                }, i * 70 + Math.random() * 60);
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
