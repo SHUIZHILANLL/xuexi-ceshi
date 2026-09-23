@@ -257,40 +257,40 @@
   },
   "models": [{
     "name": "Potion-Maker/Pio",
-    "paths": ["https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/Potion-Maker/Pio/index.json"],
+    "paths": ["https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/Potion-Maker/Pio/index.json"],
     "message": "来自 Potion Maker 的 Pio 酱 ~"
   }, {
     "name": "Potion-Maker/Tia",
-    "paths": ["https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/Potion-Maker/Tia/index.json"],
+    "paths": ["https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/Potion-Maker/Tia/index.json"],
     "message": "来自 Potion Maker 的 Tia 酱 ~"
   }, {
     "name": "HyperdimensionNeptunia",
     "paths": [
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/neptune_classic/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepnep/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/neptune_santa/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepmaid/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepswim/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/noir_classic/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/noir/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/noir_santa/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/noireswim/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/blanc_classic/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/blanc_normal/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/blanc_swimwear/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/vert_classic/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/vert_normal/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/vert_swimwear/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepgear/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepgear_extra/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/nepgearswim/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/histoire/index.json",
-      "https://fastly.jsdelivr.net/gh/fghrsh/live2d_api/model/HyperdimensionNeptunia/histoirenohover"
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/neptune_classic/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepnep/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/neptune_santa/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepmaid/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepswim/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/noir_classic/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/noir/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/noir_santa/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/noireswim/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/blanc_classic/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/blanc_normal/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/blanc_swimwear/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/vert_classic/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/vert_normal/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/vert_swimwear/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepgear/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepgear_extra/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/nepgearswim/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/histoire/index.json",
+      "https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/HyperdimensionNeptunia/histoirenohover/index.json"
     ],
     "message": "你是理卫兵？还是恨理蛆？"
   }, {
     "name": "Hiyori",
-    "paths": ["https://fastly.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Hiyori/Hiyori.model3.json"],
+    "paths": ["https://shuizhilanll.github.io/xuexi-ceshi/live2d-models/Hiyori/Hiyori.model3.json"],
     "message": "我是 理卫兵 哦 ~"
   }]
 }
