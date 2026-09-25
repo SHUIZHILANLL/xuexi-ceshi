@@ -1,12 +1,10 @@
 {
     "models": [
         "Potion-Maker/Pio",
-        "Potion-Maker/Tia",
-
+        "Potion-Maker/Tia"
     ],
     "messages": [
         "来自 Potion Maker 的 恨理蛆 Pio 酱 ~",
-        "来自 Potion Maker 的 恨理蛆 Tia 酱 ~",
-
+        "来自 Potion Maker 的 恨理蛆 Tia 酱 ~"
     ]
 }
