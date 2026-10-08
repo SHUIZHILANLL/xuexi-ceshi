@@ -14,28 +14,361 @@
         :root {
             --primary: #eb2525;
             --primary-dark: #1d4ed8;
-            --text: #1f2937;
-            --text-light: #6b7280;
+            /* 玻璃板变透之后，文字要跟着压深，不然会被背景吃掉 */
+            --text: #1a1326;
+            --text-light: #4a3f5e;
             --bg: #ffffff;
             --bg-alt: #f9fafb;
-            --border: #e5e7eb;
+            --border: rgba(120, 90, 160, 0.22);
+
+            /* 玻璃板块：越透明、背景露得越多；字的可读性交给 backdrop-filter 的模糊 */
+            --glass: rgba(242, 234, 255, 0.52);
+            --glass-soft: rgba(246, 239, 255, 0.44);
+            --glass-strong: rgba(246, 239, 255, 0.62);
+            --glass-edge: rgba(238, 178, 255, 0.34);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
             line-height: 1.6;
             color: var(--text);
-            background: url('bg.png') no-repeat center center fixed;
+            /* bg.png 同时充当视频没加载出来时的兜底背景 */
+            background: #14101c url('bg.png') no-repeat center center fixed;
             background-size: cover;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* =========================================
+           开屏：整屏壁纸，下滑才进正文
+           ========================================= */
+        .hero {
+            position: relative;
+            height: 100vh;
+            height: 100svh;              /* 手机上避开地址栏高度跳动 */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 44px;
+        }
+
+        .hero-hint {
+            padding: 8px 18px;
+            font-size: 0.82rem;
+            letter-spacing: 0.22em;
+            color: #fff;
+            text-decoration: none;
+            text-shadow: 0 2px 12px rgba(20, 10, 30, 0.85);
+            background: rgba(24, 12, 36, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            animation: heroBob 2.4s ease-in-out infinite;
+            transition: opacity 0.35s ease;
+        }
+
+        /* 已开始下滑就让提示淡出，别挡着欣赏壁纸 */
+        .hero-hint.faded {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes heroBob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(7px); }
+        }
+
+        /* =========================================
+           整页动态视频背景
+           ========================================= */
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* 视频之上压一层柔光，保证白色内容区的字还看得清 */
+        .bg-veil {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(120% 85% at 50% 0%, rgba(255, 255, 255, 0) 38%, rgba(24, 12, 36, 0.3) 100%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+        }
+
+        /* =========================================
+           壁纸同款：像素字时钟 + 跟着声音跳的曲线
+           位置照原版 scene.json 的 3840x2160 坐标换算
+           ========================================= */
+        @font-face {
+            font-family: '8bit Operator Plus';
+            src: url('fonts/8bitOperatorPlus8-Regular.ttf') format('truetype');
+            font-display: swap;
+        }
+
+        .wp-clock {
+            position: fixed;
+            left: 20.5%;              /* 原版 origin x = 785.92 / 3840 */
+            top: 32.4%;               /* 原版 origin y = 1459.88 / 2160 */
+            transform: translate(-50%, -50%) skewY(-0.12deg);
+            z-index: -1;              /* 和背景同层，不会盖住正文 */
+            pointer-events: none;
+            user-select: none;
+            font-family: '8bit Operator Plus', ui-monospace, Consolas, monospace;
+            font-size: clamp(20px, 2.1vw, 42px);
+            line-height: 1;
+            letter-spacing: .06em;
+            color: rgba(238, 178, 255, .9);
+            text-shadow: 0 0 12px rgba(238, 178, 255, .55), 0 0 26px rgba(150, 70, 255, .35);
+        }
+
+        .wp-vis {
+            position: fixed;
+            left: 20.5%;
+            top: 42%;
+            width: min(34vw, 470px);
+            height: 130px;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 接音频的小面板（靠右下角） */
+        .wp-audio {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            font: 12px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #f3e9ff;
+            background: rgba(24, 14, 38, .78);
+            border: 1px solid rgba(238, 178, 255, .32);
+            border-radius: 999px;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        /* 收起后的小圆钮 */
+        .wp-audio-mini {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 20;
+            width: 40px;
+            height: 40px;
+            font: 18px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #eeb2ff;
+            background: rgba(24, 14, 38, .82);
+            border: 1px solid rgba(238, 178, 255, .45);
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            transition: transform .15s ease, background .15s ease;
+        }
+
+        .wp-audio-mini:hover {
+            transform: scale(1.08);
+            background: rgba(52, 26, 74, .9);
+        }
+
+        .wp-audio-mini[hidden] {
+            display: none;
+        }
+
+        .wp-audio button {
+            font: inherit;
+            color: #1a1026;
+            background: #eeb2ff;
+            border: 0;
+            border-radius: 999px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        .wp-audio button.main {
+            width: 30px;
+            height: 26px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .wp-audio button.ghost {
+            color: #eeb2ff;
+            background: transparent;
+            border: 1px solid rgba(238, 178, 255, .5);
+        }
+
+        .wp-audio .title {
+            max-width: 16ch;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #eeb2ff;
+        }
+
+        .wp-audio .msg {
+            max-width: 24ch;
+            opacity: .8;
+        }
+
+        .wp-audio button.active {
+            color: #1a1026;
+            background: #eeb2ff;
+            border-color: #eeb2ff;
+        }
+
+        .wp-audio input[type="range"] {
+            width: 72px;
+            height: 4px;
+            accent-color: #eeb2ff;
+            cursor: pointer;
+        }
+
+        /* 藏起来的选歌 input：还能被 label 点开，但不占位 */
+        .wp-audio .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        /* =========================================
+           站内曲目列表
+           ========================================= */
+        .wp-list {
+            position: fixed;
+            right: 16px;
+            bottom: 64px;
+            z-index: 21;
+            width: 330px;
+            max-height: min(56vh, 470px);
+            overflow-y: auto;
+            padding: 10px 8px 8px;
+            font: 12px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #f3e9ff;
+            background: rgba(20, 12, 32, .93);
+            border: 1px solid rgba(238, 178, 255, .32);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+        }
+
+        .wp-list[hidden] {
+            display: none;
+        }
+
+        .wp-list-head {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 8px 8px;
+            color: #eeb2ff;
+            opacity: .9;
+        }
+
+        .wp-list ol {
+            list-style: none;
+        }
+
+        .wp-list li button {
+            display: block;
+            width: 100%;
+            padding: 5px 8px;
+            overflow: hidden;
+            font: inherit;
+            color: inherit;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background: transparent;
+            border: 0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .wp-list li button:hover {
+            background: rgba(238, 178, 255, .14);
+        }
+
+        .wp-list li button.playing {
+            color: #1a1026;
+            background: #eeb2ff;
+        }
+
+        .wp-list-file {
+            display: block;
+            margin-top: 8px;
+            padding: 6px 8px;
+            color: #eeb2ff;
+            text-align: center;
+            border: 1px dashed rgba(238, 178, 255, .4);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* 窄屏时白色内容区会把背景层整个盖住，留个淡一点的版本 */
+        @media (max-width: 900px) {
+            .wp-clock,
+            .wp-vis {
+                opacity: .22;
+            }
+        }
+
+        /* 系统开了“减少动态效果”就干脆别播视频、别画曲线、别让提示上下浮动 */
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            .bg-video,
+            .bg-veil,
+            .wp-vis {
+                display: none;
+            }
+
+            .hero-hint {
+                animation: none;
+            }
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 0 24px;
-            background: rgba(255, 255, 255, 0.88);
+            background: var(--glass);
             border-radius: 0;
             min-height: 100vh;
+            -webkit-backdrop-filter: blur(22px) saturate(1.15);
+            backdrop-filter: blur(22px) saturate(1.15);
+            box-shadow: inset 1px 0 0 var(--glass-edge), inset -1px 0 0 var(--glass-edge);
+        }
+
+        /* 老浏览器不认 backdrop-filter：玻璃透不了，就把底色加厚，别让字糊在背景上 */
+        @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+            .container {
+                background: rgba(246, 239, 255, 0.88);
+            }
+
+            .post-card {
+                background: rgba(246, 239, 255, 0.84);
+            }
         }
 
         /* Header */
@@ -90,7 +423,8 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--bg-alt);
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-edge);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -180,7 +514,8 @@
         .post-card {
             position: relative;
             overflow: hidden;
-            background: var(--bg-alt);
+            background: var(--glass-soft);
+            border: 1px solid var(--glass-edge);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 16px;
@@ -189,7 +524,7 @@
 
         .post-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 6px 20px rgba(120, 60, 180, 0.18);
         }
 
         .post-card:last-child {
@@ -206,7 +541,7 @@
             left: -20px;
             background: url('bg1.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(2px);
+            filter: blur(7px);
             z-index: 0;
         }
 
@@ -217,7 +552,7 @@
             right: 0;
             bottom: 0;
             left: 0;
-            background: rgba(255, 255, 255, 0.78);
+            background: var(--glass-strong);
             z-index: 1;
         }
 
@@ -236,7 +571,7 @@
             left: -20px;
             background: url('bg2.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(2px);
+            filter: blur(7px);
             z-index: 0;
         }
 
@@ -247,7 +582,7 @@
             right: 0;
             bottom: 0;
             left: 0;
-            background: rgba(255, 255, 255, 0.78);
+            background: var(--glass-strong);
             z-index: 1;
         }
 
@@ -266,7 +601,7 @@
             left: -20px;
             background: url('bg3.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(2px);
+            filter: blur(7px);
             z-index: 0;
         }
 
@@ -277,7 +612,7 @@
             right: 0;
             bottom: 0;
             left: 0;
-            background: rgba(255, 255, 255, 0.78);
+            background: var(--glass-strong);
             z-index: 1;
         }
 
@@ -296,7 +631,7 @@
             left: -20px;
             background: url('bg4.webp') no-repeat center center;
             background-size: cover;
-            filter: blur(2px);
+            filter: blur(7px);
             z-index: 0;
         }
 
@@ -307,7 +642,7 @@
             right: 0;
             bottom: 0;
             left: 0;
-            background: rgba(255, 255, 255, 0.78);
+            background: var(--glass-strong);
             z-index: 1;
         }
 
@@ -342,7 +677,7 @@
         }
 
         .tag {
-            background: white;
+            background: rgba(255, 255, 255, 0.55);
             color: var(--primary);
             padding: 4px 12px;
             border-radius: 20px;
@@ -362,7 +697,8 @@
             align-items: center;
             gap: 12px;
             padding: 16px;
-            background: var(--bg-alt);
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-edge);
             border-radius: 8px;
         }
 
@@ -462,7 +798,47 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 动态背景：整页循环播放的壁纸视频 -->
+    <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto"
+           poster="bg.png" aria-hidden="true" tabindex="-1">
+        <source src="bg-video.mp4" type="video/mp4">
+    </video>
+    <div class="bg-veil" aria-hidden="true"></div>
+
+    <!-- 壁纸同款：像素字时钟 + 音频曲线（都在背景层） -->
+    <div class="wp-clock" id="wpClock" aria-hidden="true">--:--:--</div>
+    <canvas class="wp-vis" id="wpVis" aria-hidden="true"></canvas>
+
+    <!-- 曲线要跟着动的音乐就由网站自己播（不需要任何授权） -->
+    <audio id="wpMusic" preload="none"></audio>
+
+    <!-- 让曲线跟着音乐动：站内曲库播放 -->
+    <div class="wp-audio" id="wpAudio">
+        <button id="wpPlay" type="button" class="main" title="播放 / 暂停">▶</button>
+        <span class="title" id="wpAudioTitle"></span>
+        <span class="msg" id="wpAudioMsg">没接声音，先呼吸</span>
+        <input id="wpVol" type="range" min="0" max="1" step="0.05" value="0.6" title="音量">
+        <button id="wpList" type="button" class="ghost" title="从站内曲库里挑一首">选歌</button>
+        <input id="wpFile" type="file" accept="audio/*" multiple class="visually-hidden">
+        <button id="wpAudioHide" type="button" class="ghost" title="收起（右下角会留一个小按钮）">×</button>
+    </div>
+
+    <!-- 收起后的小呼出按钮 -->
+    <button id="wpAudioShow" type="button" class="wp-audio-mini" title="打开音乐控制" hidden>♪</button>
+
+    <!-- 站内曲目列表（点“选歌”展开） -->
+    <div class="wp-list" id="wpListPanel" hidden>
+        <div class="wp-list-head">站内曲库<span id="wpListCount"></span></div>
+        <ol id="wpListUl"></ol>
+        <label class="wp-list-file" for="wpFile">从电脑里挑文件…（本次会话有效，不上传）</label>
+    </div>
+
+    <!-- 开屏：先满屏欣赏壁纸，点提示或直接下滑进正文 -->
+    <section class="hero" aria-label="壁纸开屏">
+        <a class="hero-hint" href="#main">▼ 下滑看介绍</a>
+    </section>
+
+    <div class="container" id="main">
         <!-- Header -->
         <header>
             <div class="avatar">
@@ -628,6 +1004,385 @@
             <p style="margin-top: 8px;"></p>
         </footer>
     </div>
+
+    <!-- 动态背景的省电 / 降级逻辑 -->
+    <script>
+    (function () {
+        // 开屏提示：一旦开始下滑就淡出（这段要在视频的提前 return 之前）
+        var hint = document.querySelector('.hero-hint');
+        if (hint) {
+            var syncHint = function () { hint.classList.toggle('faded', window.scrollY > 60); };
+            window.addEventListener('scroll', syncHint, { passive: true });
+            syncHint();
+        }
+
+        var video = document.getElementById('bgVideo');
+        if (!video) return;
+
+        // 1) 系统开了“减少动态效果”或浏览器开了省流量，就别加载视频
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var saveData = navigator.connection && navigator.connection.saveData;
+        if (reduce || saveData) { video.remove(); return; }
+
+        // 2) 视频挂了就退回 bg.png，页面不会开天窗
+        video.addEventListener('error', function () { video.remove(); });
+        var source = video.querySelector('source');
+        if (source) source.addEventListener('error', function () { video.remove(); });
+
+        // 3) 切到后台暂停，省电省流量；切回来接着播
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                video.pause();
+            } else {
+                var p = video.play();
+                if (p && p.catch) p.catch(function () {});
+            }
+        });
+
+        // 4) 有些浏览器会拦自动播放，首次交互时补一下
+        function kick() {
+            var p = video.play();
+            if (p && p.catch) p.catch(function () {});
+        }
+        video.addEventListener('canplay', kick, { once: true });
+        document.addEventListener('pointerdown', kick, { once: true });
+    })();
+    </script>
+
+    <!-- 壁纸同款：像素字时钟 + 音频可视化曲线 -->
+    <script>
+    (function () {
+        /* ---------- 时钟：24 小时制、带秒、冒号分隔（照原版脚本） ---------- */
+        var clock = document.getElementById('wpClock');
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function tickClock() {
+            var d = new Date();
+            clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+        tickClock();
+        setInterval(tickClock, 250);
+
+        /* ---------- 音频可视化曲线 ---------- */
+        var canvas = document.getElementById('wpVis');
+        var ctx = canvas.getContext('2d');
+        var W = 0, H = 0;
+        var BINS = 48;                        // 原版 maxFreqBand 取 31~63，这里折中
+        var target = new Float32Array(BINS);
+        var shown = new Float32Array(BINS);
+        var analyser = null, freq = null, audioCtx = null;
+
+        function resize() {
+            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            W = canvas.clientWidth || 1;
+            H = canvas.clientHeight || 1;
+            canvas.width = Math.max(1, Math.round(W * dpr));
+            canvas.height = Math.max(1, Math.round(H * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        function collect(t) {
+            if (analyser) {
+                analyser.getByteFrequencyData(freq);
+                var maxBand = Math.floor(freq.length * 0.5);
+                for (var i = 0; i < BINS; i++) {
+                    var idx = Math.min(freq.length - 1, Math.floor(Math.pow(i / BINS, 1.7) * maxBand));
+                    target[i] = freq[idx] / 255;
+                }
+            } else {
+                // 没接声音时给个很轻的呼吸，别让线是死的
+                for (var j = 0; j < BINS; j++) {
+                    target[j] = 0.16 + 0.14 * Math.sin(t / 1500 + j * 0.4) * Math.sin(t / 3300 + j * 0.13);
+                }
+            }
+            for (var k = 0; k < BINS; k++) shown[k] += (target[k] - shown[k]) * 0.22;
+        }
+
+        function ribbon() {
+            var mid = H / 2;
+            var step = W / (BINS - 1);
+            var pts = [];
+            for (var i = 0; i < BINS; i++) {
+                // 原版 shader 里就是取镜像值做左右对称
+                var m = i < BINS / 2 ? i : BINS - 1 - i;
+                pts.push(shown[m] * mid * 0.86);
+            }
+            function curve(sign) {
+                ctx.beginPath();
+                ctx.moveTo(0, mid + sign * pts[0]);
+                for (var k = 1; k < BINS - 1; k++) {
+                    var xc = (k + 0.5) * step;
+                    var yc = mid + sign * (pts[k] + pts[k + 1]) / 2;
+                    ctx.quadraticCurveTo(k * step, mid + sign * pts[k], xc, yc);
+                }
+                ctx.lineTo(W, mid + sign * pts[BINS - 1]);
+                ctx.stroke();
+            }
+            ctx.clearRect(0, 0, W, H);
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(238, 178, 255, .75)';
+            ctx.strokeStyle = 'rgba(241, 186, 255, .92)';
+            ctx.lineWidth = 1.4;
+            curve(-1);
+            curve(1);
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(238, 178, 255, .22)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, mid);
+            ctx.lineTo(W, mid);
+            ctx.stroke();
+        }
+
+        function loop(t) {
+            collect(t);
+            ribbon();
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        /* ---------- 声音来源：站内曲库 ---------- */
+        var panel = document.getElementById('wpAudio');
+        var msg = document.getElementById('wpAudioMsg');
+        var titleEl = document.getElementById('wpAudioTitle');
+        var audioEl = document.getElementById('wpMusic');
+        var playBtn = document.getElementById('wpPlay');
+        var fileInput = document.getElementById('wpFile');
+        var volInput = document.getElementById('wpVol');
+        var listBtn = document.getElementById('wpList');
+        var listPanel = document.getElementById('wpListPanel');
+        var listOl = document.getElementById('wpListUl');
+        var listCount = document.getElementById('wpListCount');
+        var elementSource = null;      // 同一个 audio 元素只能建一次源节点
+        var playlist = [];
+        var index = 0;
+        var objectUrls = [];
+
+        function reset() {
+            analyser = null;   // 断开分析器，曲线回到呼吸态（音频本身不受影响）
+        }
+
+        function ensureCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            return audioCtx;
+        }
+
+        function makeAnalyser() {
+            var a = ensureCtx().createAnalyser();
+            a.fftSize = 1024;
+            a.smoothingTimeConstant = 0.82;
+            freq = new Uint8Array(a.frequencyBinCount);
+            return a;
+        }
+
+        /* ---------- 站内曲目列表 ---------- */
+        function highlight() {
+            var nodes = listOl.querySelectorAll('button');
+            for (var i = 0; i < nodes.length; i++) {
+                nodes[i].className = (i === index && !audioEl.paused) ? 'playing' : '';
+            }
+        }
+
+        function renderList() {
+            listOl.innerHTML = '';
+            listCount.textContent = playlist.length + ' 首';
+            playlist.forEach(function (t, i) {
+                var li = document.createElement('li');
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = t.name;
+                b.title = t.name;
+                b.addEventListener('click', function () {
+                    index = i;
+                    playTrack(t.src, t.name);
+                });
+                li.appendChild(b);
+                listOl.appendChild(li);
+            });
+            highlight();
+        }
+
+        function closeList() {
+            listPanel.hidden = true;
+            listBtn.classList.remove('active');
+        }
+
+        listBtn.addEventListener('click', function () {
+            var open = listPanel.hidden;
+            listPanel.hidden = !open;
+            listBtn.classList.toggle('active', open);
+            if (open) { renderList(); listPanel.scrollTop = 0; }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeList();
+        });
+
+        // 点列表以外的地方自动收起
+        document.addEventListener('pointerdown', function (e) {
+            if (listPanel.hidden) return;
+            if (e.target.closest && e.target.closest('#wpListPanel, #wpList')) return;
+            closeList();
+        });
+
+        /* ===== 1) 网页自己播的音频：零授权 ===== */
+        // 注意：file:// 打开的页面里，浏览器把本地音频当跨域资源，
+        // 一旦接进 Web Audio 就会被静音。所以本地直连播放（有声音、曲线不跟），
+        // 传到 GitHub Pages（http/https）后会自动启用完整分析管线。
+        var CAN_ANALYSE = location.protocol !== 'file:';
+
+        function attachElement() {
+            if (!CAN_ANALYSE) {
+                analyser = null;                  // 曲线退回呼吸态，声音照常出
+                return;
+            }
+            var ac = ensureCtx();
+            if (!elementSource) elementSource = ac.createMediaElementSource(audioEl);
+            analyser = makeAnalyser();
+            elementSource.disconnect();
+            elementSource.connect(analyser);
+            analyser.connect(ac.destination);     // 必须接回输出，不然只有曲线没声音
+        }
+
+        function playTrack(src, name) {
+            reset();
+            attachElement();
+            audioEl.loop = playlist.length <= 1;
+            audioEl.src = src;
+            var p = audioEl.play();
+            if (p && p.then) {
+                p.then(function () {
+                    playBtn.textContent = '❚❚';
+                    titleEl.textContent = name || '';
+                    msg.textContent = CAN_ANALYSE ? '网页自己在播' : '本地播放中（曲线需 http 才跟）';
+                    highlight();
+                }).catch(function (e) {
+                    msg.textContent = '播放失败：' + (e.message || e.name);
+                });
+            }
+        }
+
+        playBtn.addEventListener('click', function () {
+            if (!audioEl.paused) {
+                audioEl.pause();
+                playBtn.textContent = '▶';
+                msg.textContent = '已暂停';
+                highlight();
+                return;
+            }
+            if (audioEl.src) {
+                attachElement();
+                audioEl.play().then(function () { playBtn.textContent = '❚❚'; highlight(); });
+                msg.textContent = CAN_ANALYSE ? '网页自己在播' : '本地播放中（曲线需 http 才跟）';
+                return;
+            }
+            if (playlist.length) {
+                index = 0;
+                playTrack(playlist[0].src, playlist[0].name);
+                return;
+            }
+            msg.textContent = '还没歌，从列表里挑一首';
+            listPanel.hidden = false;
+            listBtn.classList.add('active');
+            renderList();
+        });
+
+        // 本地挑歌：只活在这次会话里，不会上传任何东西
+        fileInput.addEventListener('change', function () {
+            var files = Array.prototype.slice.call(fileInput.files || []);
+            if (!files.length) return;
+            objectUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+            objectUrls = files.map(function (f) { return URL.createObjectURL(f); });
+            playlist = files.map(function (f, i) {
+                return { src: objectUrls[i], name: f.name.replace(/\.[^.]+$/, '') };
+            });
+            index = 0;
+            renderList();
+            playTrack(playlist[0].src, playlist[0].name);
+        });
+
+        audioEl.addEventListener('ended', function () {
+            if (playlist.length < 2) return;
+            index = (index + 1) % playlist.length;
+            playTrack(playlist[index].src, playlist[index].name);
+        });
+
+        volInput.addEventListener('input', function () {
+            audioEl.volume = parseFloat(volInput.value);
+        });
+        audioEl.volume = parseFloat(volInput.value);
+
+        // 站内曲库：文件名直接内嵌，本地 file:// 打开也能用（fetch 读本地文件会被浏览器拦掉）
+        var BUILTIN = [
+            "愛別離苦 - 折倉俊則.mp3",
+            "孤独な影 - 橋本彦士.mp3",
+            "海から来た少女 - Elements Garden、折倉俊則.mp3",
+            "琥珀色の海へ - 三輪学.mp3",
+            "花の散る日 - 三輪学.mp3",
+            "楽しい予感 - 折倉俊則.mp3",
+            "青空の下でキミと - Elements Garden、折倉俊則.mp3",
+            "夕空を見上げて - Elements Garden、折倉俊則.mp3",
+            "遥かな空 - 安瀬聖.mp3",
+            "悠久 - MANYO.mp3",
+            "優しい風が吹くあの場所で - 三輪学.mp3",
+            "Blue - 折倉俊則.mp3",
+            "Cotton Flight - 三輪学.mp3",
+            "Fairy Wreath (violin arrange) - MANYO.mp3",
+            "Little Shine - 折倉俊則.mp3",
+            "Lunatic Tears - Little Wing.mp3",
+            "Reborn - MANYO.mp3",
+            "SAKURA - 折倉俊則.mp3",
+            "Sayonara - Little Wing.mp3",
+            "Way to home - Funczion SOUNDS.mp3",
+            "クロヤ - MANYO.mp3",
+            "スミレ - 折倉俊則.mp3",
+            "ちる はな さくら ~インストバージョン~ - 三輪学.mp3"
+        ];
+
+        function toTracks(list) {
+            return list.map(function (item) {
+                if (typeof item === 'string') {
+                    return { src: 'music/' + encodeURIComponent(item), name: item.replace(/\.[^.]+$/, '') };
+                }
+                return { src: item.src, name: item.name || item.src };
+            });
+        }
+
+        playlist = toTracks(BUILTIN);
+        titleEl.textContent = '站内 ' + playlist.length + ' 首';
+        msg.textContent = CAN_ANALYSE ? '点 ▶ 开始' : '点 ▶ 开始（曲线需 http 才跟）';
+        renderList();
+
+        // 部署到 GitHub Pages 后，以 music/manifest.json 为准（本地打开读不到就忽略）
+        fetch('music/manifest.json', { cache: 'no-store' }).then(function (r) {
+            return r.ok ? r.json() : null;
+        }).then(function (list) {
+            if (!Array.isArray(list) || !list.length) return;
+            if (!audioEl.paused) return;          // 正在放着歌就别动播放列表
+            playlist = toTracks(list);
+            titleEl.textContent = '站内 ' + playlist.length + ' 首';
+            renderList();
+        }).catch(function () { /* file:// 下 fetch 会被拦，正常 */ });
+
+        /* ===== 2) 收起 / 呼出 ===== */
+        var miniBtn = document.getElementById('wpAudioShow');
+
+        document.getElementById('wpAudioHide').addEventListener('click', function () {
+            panel.style.display = 'none';
+            closeList();                       // 收面板顺手把曲目列表也收了
+            miniBtn.hidden = false;
+        });
+
+        miniBtn.addEventListener('click', function () {
+            panel.style.display = '';
+            miniBtn.hidden = true;
+        });
+    })();
+    </script>
 
     <script src="https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js"></script>
 
