@@ -323,11 +323,31 @@
             cursor: pointer;
         }
 
-        /* 窄屏时白色内容区会把背景层整个盖住，留个淡一点的版本 */
+        /* =========================================
+           窄屏：时钟与频谱曲线要看得清
+           之前这里把不透明度压到 .22（手机上等于隐形），
+           现在改成放大 + 深色描边 + 紫色光晕，并挪到画面中部，
+           这样无论壁纸那块是亮是暗都能读出来。
+           ========================================= */
         @media (max-width: 900px) {
-            .wp-clock,
+            .wp-clock {
+                left: 50%;
+                top: 22%;
+                font-size: clamp(28px, 9vw, 46px);
+                letter-spacing: .08em;
+                color: #ffeeff;
+                text-shadow:
+                    0 0 3px rgba(16, 6, 26, .95),
+                    0 0 9px rgba(16, 6, 26, .85),
+                    0 0 18px rgba(238, 178, 255, .95),
+                    0 0 40px rgba(150, 70, 255, .8);
+            }
+
             .wp-vis {
-                opacity: .22;
+                left: 50%;
+                top: 33%;
+                width: 88vw;
+                height: 150px;
             }
         }
 
@@ -1121,6 +1141,7 @@
         var target = new Float32Array(BINS);
         var shown = new Float32Array(BINS);
         var analyser = null, freq = null, audioCtx = null;
+        var boost = 1;                        // 窄屏线条要更粗更亮，缩在手机上才看得出来
 
         function resize() {
             var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1129,6 +1150,7 @@
             canvas.width = Math.max(1, Math.round(W * dpr));
             canvas.height = Math.max(1, Math.round(H * dpr));
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            boost = window.innerWidth <= 900 ? 2 : 1;
         }
         resize();
         window.addEventListener('resize', resize);
@@ -1173,14 +1195,14 @@
             ctx.clearRect(0, 0, W, H);
             ctx.lineJoin = 'round';
             ctx.lineCap = 'round';
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = 'rgba(238, 178, 255, .75)';
-            ctx.strokeStyle = 'rgba(241, 186, 255, .92)';
-            ctx.lineWidth = 1.4;
+            ctx.shadowBlur = 12 * boost;
+            ctx.shadowColor = 'rgba(238, 178, 255, .85)';
+            ctx.strokeStyle = boost > 1 ? 'rgba(255, 214, 255, 1)' : 'rgba(241, 186, 255, .92)';
+            ctx.lineWidth = 1.4 * boost;
             curve(-1);
             curve(1);
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = 'rgba(238, 178, 255, .22)';
+            ctx.strokeStyle = boost > 1 ? 'rgba(238, 178, 255, .4)' : 'rgba(238, 178, 255, .22)';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(0, mid);
