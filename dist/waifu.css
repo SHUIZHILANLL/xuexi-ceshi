@@ -267,3 +267,73 @@
 		transform: translate(0, 0) rotate(0);
 	}
 }
+
+/* =========================================================
+   窄屏（手机）适配：原版固定 300x300，在 390px 宽的屏上占了
+   将近八成宽度，糊住半个屏幕。这里按屏宽分档收小。
+   注：画布 backing store 仍是 800x800，缩小只是显示尺寸，
+   所以不会糊，只是变小。
+   ========================================================= */
+@media (max-width: 768px) {
+	#live2d {
+		height: 190px;
+		width: 190px;
+	}
+
+	#waifu-tips {
+		font-size: 12px;
+		line-height: 20px;
+		margin: -24px 12px;
+		min-height: 56px;
+		padding: 5px 9px;
+		width: 200px;
+	}
+
+	#waifu-tool {
+		gap: 4px;
+		right: -2px;
+		top: 46px;
+	}
+
+	#waifu-tool svg {
+		height: 20px;
+	}
+
+	#waifu-toggle {
+		bottom: 88px;
+		padding: 4px;
+		width: 48px;
+	}
+
+	#waifu-toggle svg {
+		height: 20px;
+	}
+}
+
+@media (max-width: 420px) {
+	#live2d {
+		height: 150px;
+		width: 150px;
+	}
+
+	#waifu-tips {
+		margin: -20px 8px;
+		width: 170px;
+	}
+
+	#waifu-tool {
+		top: 34px;
+	}
+}
+
+/* 横屏手机：高度紧张，再收一档 */
+@media (max-width: 900px) and (max-height: 480px) {
+	#live2d {
+		height: 130px;
+		width: 130px;
+	}
+
+	#waifu-tool {
+		top: 28px;
+	}
+}

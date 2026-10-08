@@ -769,6 +769,57 @@
         }
 
         /* =========================================
+           手机上的音乐面板与开屏提示
+           窄屏时底部面板几乎占满一行，会把「下滑看介绍」
+           压住，所以这里把提示抬高、把面板收紧。
+           ========================================= */
+        @media (max-width: 700px) {
+            .hero {
+                padding-bottom: 108px;
+            }
+
+            .hero-hint {
+                font-size: 0.74rem;
+                letter-spacing: 0.16em;
+                padding: 7px 14px;
+            }
+
+            .wp-audio {
+                right: 10px;
+                bottom: 10px;
+                gap: 6px;
+                padding: 6px 8px;
+                max-width: calc(100vw - 20px);
+            }
+
+            .wp-audio .msg {
+                display: none;              /* 手机上省掉状态文字，只留能点的 */
+            }
+
+            .wp-audio .title {
+                max-width: 8ch;
+            }
+
+            .wp-audio input[type="range"] {
+                width: 52px;
+            }
+
+            .wp-audio-mini {
+                right: 10px;
+                bottom: 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .wp-list {
+                right: 10px;
+                bottom: 60px;
+                width: min(86vw, 300px);
+            }
+        }
+
+        /* =========================================
            点击猫咪向上飘
            ========================================= */
         .cat-float {
