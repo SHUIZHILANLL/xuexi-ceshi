@@ -82,6 +82,71 @@
         }
 
         /* =========================================
+           右上角毛玻璃导航
+           和主体用同一套紫色玻璃语言：深底 + 半透明紫描边 +
+           backdrop-filter 磨砂，当前所在板块高亮成实心紫胶囊
+           ========================================= */
+        .site-nav {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 30;                      /* 盖在正文和音乐面板之上 */
+            display: flex;
+            gap: 4px;
+            padding: 6px;
+            border-radius: 999px;
+            background: rgba(26, 15, 40, .42);
+            border: 1px solid rgba(238, 178, 255, .34);
+            box-shadow: 0 8px 28px rgba(18, 8, 30, .3);
+            -webkit-backdrop-filter: blur(14px) saturate(1.5);
+            backdrop-filter: blur(14px) saturate(1.5);
+        }
+
+        .site-nav a {
+            padding: 7px 14px;
+            font-size: .85rem;
+            color: #f4e9ff;
+            text-decoration: none;
+            white-space: nowrap;
+            border-radius: 999px;
+            transition: background .2s ease, color .2s ease;
+        }
+
+        .site-nav a:hover {
+            background: rgba(238, 178, 255, .22);
+        }
+
+        .site-nav a.active {
+            color: #1a1026;
+            font-weight: 600;
+            background: #eeb2ff;
+        }
+
+        /* 点导航跳过去时，别让固定导航压住小标题 */
+        .section {
+            scroll-margin-top: 76px;
+        }
+
+        @media (max-width: 700px) {
+            .site-nav {
+                top: 10px;
+                right: 10px;
+                gap: 2px;
+                padding: 4px;
+                max-width: calc(100vw - 20px);
+            }
+
+            .site-nav a {
+                padding: 6px 9px;
+                font-size: .76rem;
+            }
+
+            .section {
+                scroll-margin-top: 64px;
+            }
+        }
+
+        /* =========================================
            整页动态视频背景
            ========================================= */
         .bg-video {
@@ -561,7 +626,7 @@
             left: -20px;
             background: url('bg1.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(7px);
+            filter: blur(2px);
             z-index: 0;
         }
 
@@ -591,7 +656,7 @@
             left: -20px;
             background: url('bg2.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(7px);
+            filter: blur(2px);
             z-index: 0;
         }
 
@@ -621,7 +686,7 @@
             left: -20px;
             background: url('bg3.jpg') no-repeat center center;
             background-size: cover;
-            filter: blur(7px);
+            filter: blur(2px);
             z-index: 0;
         }
 
@@ -651,7 +716,7 @@
             left: -20px;
             background: url('bg4.webp') no-repeat center center;
             background-size: cover;
-            filter: blur(7px);
+            filter: blur(2px);
             z-index: 0;
         }
 
@@ -669,6 +734,69 @@
         .post-card-bg4 > * {
             position: relative;
             z-index: 2;
+        }
+
+        /* ===== 第五张背景：bg5.jpg（文字版块用的那张） ===== */
+        .post-card-bg5::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg5.jpg') no-repeat center center;
+            background-size: cover;
+            filter: blur(2px);
+            z-index: 0;
+        }
+
+        .post-card-bg5::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: var(--glass-strong);
+            z-index: 1;
+        }
+
+        .post-card-bg5 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* =========================================
+           文字版块（以文字为主的那种长文卡片）
+           和上面几张共用同一套结构，靠背景压淡 + 行距放宽
+           让视线落在字上；想换背景就改 article 上的
+           post-card-bgN 类名（bg1~bg5 都是现成图片）。
+           ========================================= */
+        .post-card-reading::before {
+            filter: blur(3px);
+        }
+
+        .post-card-reading::after {
+            background: rgba(251, 246, 255, 0.66);
+        }
+
+        .post-card-reading .post-excerpt {
+            font-size: 0.95rem;
+            line-height: 1.85;                /* 长文比默认 1.6 松一点，读着不累 */
+        }
+
+        .post-card-reading .post-excerpt + .post-excerpt {
+            margin-top: 10px;                 /* 多段之间留口气 */
+        }
+
+        /* 架构图 / 代码这类要靠空格对齐的内容：
+           HTML 默认会把连续空格和换行压成一个空格，必须用 pre-wrap 保原样 */
+        .post-excerpt.diagram {
+            font-family: ui-monospace, Consolas, "Courier New", monospace;
+            font-size: 0.8rem;
+            line-height: 1.75;
+            white-space: pre-wrap;            /* 保留换行与缩进 */
+            overflow-x: auto;                 /* 手机上太宽可以横向划 */
         }
 
         .post-date {
@@ -909,6 +1037,14 @@
         <a class="hero-hint" href="#main">▼ 下滑看介绍</a>
     </section>
 
+    <!-- 毛玻璃导航（右上角，固定） -->
+    <nav class="site-nav" id="siteNav" aria-label="站内导航">
+        <a href="#about" data-nav="about">关于我</a>
+        <a href="#works" data-nav="works">我的成就</a>
+        <a href="#feed" data-nav="feed">最新动向</a>
+        <a href="#contact" data-nav="contact">联系我</a>
+    </nav>
+
     <div class="container" id="main">
         <!-- Header -->
         <header>
@@ -932,15 +1068,24 @@
         </header>
 
         <!-- About Section -->
-        <section class="section">
+        <section class="section" id="about">
             <h2 class="section-title">关于我</h2>
             <p class="about-text">
                 我是谁？我不知道。但我知道我饿了🤤<S>(等一等会有看板娘出来)</S>
             </p>
+            <p><B>正经而言 尝试过comfyui部署anima，realvisxl,z-image与ACE-Step等模型，进行文生图，图生图，文生音等美术资产创作
+而用Lm studio本地部署Qwen3.6-35B-A3B Q4_K_P与Gemma-4-E4B，也试过将其链接到SillyTavernLauncher耍起
+看得懂html与css，足以独立制作静态网页，借助ai编写js可以实现更多交互功能
+了解git和github的储存，回滚与合并
+linux在VMware虚拟机上的安装（成功运行，但Arch的N卡驱动没搞好）
+<S>尝试过Gotod的横板跳跃游戏制作(有点忘记了)</S>
+在阿里云服务器（白嫖的2核2G）上借助ai部署过qq聊天机器人，明白服务器运行的基本原理
+熟悉电脑的各种基础工具idm，7‐Zip，油猴，Fences等等等
+</B></p>
         </section>
 
         <!-- Career Section -->
-        <section class="section">
+        <section class="section" id="works">
             <h2 class="section-title">我的成就😤↗️</h2>
             <div class="career-item">
                 <div class="career-dot"></div>
@@ -971,31 +1116,53 @@
         </section>
 
         <!-- Blog Posts Section -->
-        <section class="section">
+        <section class="section" id="feed">
             <h2 class="section-title">最新动向 干了什么我🤖</h2>
+            <article class="post-card post-card-bg5 post-card-reading">
+                <p class="post-date">2026 年 10 月 1 日</p>
+                <h3 class="post-title">喜报，qq聊天机器人成功部署云端</h3>
+                <p class="post-excerpt">
+                    
+                </p>
+                <p class="post-excerpt diagram">QQ服务器 ⇄ SnowLuma(容器) ⇄ qq-bridge(Node) ⇄ DSH(AI)
+          把QQ变成API      翻译+记忆+唤醒        agent本体
+                </p>
+                <P class="post-excerpt">可惜白嫖的阿里云2核2g太勉强了，<B>机器人</B>容易炸，明明搞了许多优化😭</P>
+                <P class="post-excerpt"><S>加我<B>机器人</B>512019559</S></P>
+                <div class="post-tags">
+                    <span class="tag">机器人</span>
+                </div>
+            </article>
 
             <article class="post-card post-card-bg1">
-                <p class="post-date">2026 年 9 月 21 日</p>
-                <h3 class="post-title">探讨了<B>情侣</B>间的俏皮互动深度解析</h3>
+                <p class="post-date">2026 年 9 月 27 日</p>
+                <h3 class="post-title">探讨ai agent妙用，不同<B>游戏</B>相互直通(入侵)</h3>
                 <p class="post-excerpt">
-                    通过观看指定视频探讨了<B>情侣</B>间的俏皮互动和共同玩乐如何增进感情。视频指出，一起跳舞、打闹等轻松愉快的活动，可以激发大脑的奖励系统，促进多巴胺和催产素（“ bonding hormone”）的释放。这些化学物质有助于减轻压力、强化积极情绪，从而加深<B>情侣</B>间的情感连接，并创造出值得回忆的甜蜜瞬间。
+                    最近在网上爆火的「把《我的世界》塞进别的<B>游戏</B>里」它并不是真把 MC 的代码移植进了《艾尔登法环》《荒野大镖客 2》这类宿主<B>游戏</B>，
+                    而是让两个<B>游戏</B>互相开放接口、做跨<B>游戏</B>联机——一边跑 MC、一边跑宿主<B>游戏</B>，双方各自输出自己的画面与状态，
+                    再由中间那层程序把 MC 渲染出来的画面"拼接/贴"进宿主<B>游戏</B>的视野里，所以玩家才看到在别的<B>游戏</B>里正常走位、挖方块、被自己<B>游戏</B>里的怪追着打；
+                    它本质是"跨<B>游戏</B>联机 + 一个画面合成的程序"，而非代码级移植
                 </p>
                 <div class="post-tags">
-                    <span class="tag">视频</span>
-                    <span class="tag">情侣互动</span>
+                    <span class="tag">游戏</span>
+                    <span class="tag">互通模组</span>
                 </div>
             </article>
 
             <article class="post-card post-card-bg2">
                 <p class="post-date">2026 年 9 月 18 日</p>
-                <h3 class="post-title">深度探讨坏猫学长所代表的<B>男娘</B>文化</h3>
+                <h3 class="post-title">探讨沈理工所代表的<B>男娘</B>文化起源</h3>
                 <p class="post-excerpt">
-                    首先按xp来分析，<B>男娘</B>的本质是穿着打扮带有女性风格的男性，与扶她正好相反，其次是异装癖，加上<B>男娘</B>普遍居于年轻化，有正太的标签，很容易联想到神父。所以喜欢<B>男娘</B>绝大多数是喜欢其女性特征以及带有的性别反差，异装癖，可能还有一些联通成分和喜欢后位。而gay则不同，其不同于<B>男娘</B>中的伪娘，而是BL那种耽美甚至更偏重口的领土。举个例子来说，就像带了兽耳发箍和尾巴的兽娘，以及带有大部分动物化特征的半furry和完全体furry，兽娘本质是女性元素占大多数，兽耳等只是衬托可爱的一些次要元素，所以带兽耳尾巴不算furry，因为元素的重点不一样。总结，所以喜欢<B>男娘</B>并不是gay，正宗的gay反而不喜欢太浓厚的女性元素。
-                </p>
+                    <B>男娘</B>>的诞生最开始是日本战败导致军国主义与天皇信仰崩溃，在经济泡沫过后，
+                    物质满溢反衬出青年一代“为何而活”的空虚。二次元等娱乐工业填补真空，
+                    身份不再由社会角色赋予，而变成可选购的文化符号，把“你是谁”变成由“你喜欢什么”决定。
+                    当代资本（这个资本怎么这么坏😡😡，但是与马哲的框架分析下，确实是有关于资本）将“人的意义”从社会实践中剥离，
+                    替换为娱乐。旧有的劳动、家庭、性别叙事被主动打破，以便让身份本身成为消费品。如今，在传统叙事被打破、审美标准残酷竞争的条件下，
+                    性别认知失调。一部分人主动重构性别认同，另一部分人陷入压抑。<B>男娘</B>>现象正是从日本异装亚文化出发，经娱乐工业收编为消费符号，
+                    再被中文互联网二次发扬</p>
                 <div class="post-tags">
-                    <span class="tag">坏猫学长</span>
                     <span class="tag">男娘</span>
-                    <span class="tag">兽娘</span>
+                    <span class="tag">学术</span>
                 </div>
             </article>
 
@@ -1003,12 +1170,23 @@
                 <p class="post-date">2026 年 9 月 15 日</p>
                 <h3 class="post-title">深度探讨《<B>原神</B>》与《鸣潮》与《哪吒2》</h3>
                 <p class="post-excerpt">
-                    近日，网络上对于<B>原神</B>的恶评此起彼浮，对此，大伟哥不禁潸然泪下，回顾<B>原神</B>自2020年9月28日开服至今，<B>原神</B>已将近陪伴了五年时光，但新兴势力鸣潮却打着“抗米援潮的、原末鸣初”的口号，妄图将<B>原神</B>推下神坛，对此，各位旅行者不妨，深度探讨下《<B>原神</B>》与《鸣潮》。
-                    对于<B>原神</B>黑子，众多角色表达了不同的看法，问温和评书的钟离大发雷霆，喊出了那句：“天动万象，沉稳的语气反映出<B>原神</B>黑子的浮躁；风色诗人巴巴托斯也说：“别想逃开呦！"吸走了<B>原神</B>黑子们的锐气；就连血狼破军也发言："<B>原神</B>黑子鉴定为超小杯，哈哈大笑”。雷之国的天皇雷电影也掏出了薙刀：“中此刻寂灭之时！”，二命雷神的愿力让<B>原神</B>黑子无地自容。智慧之神的西妲平静地说：“知识，与你分享”，将元素发应的奥秘分享给世人。芙宁娜快步上前，大喊道："欢唱，以我之名。”欢讼起<B>原神</B>的美德。玛薇卡踩着摩托驰来，喊道：“聆听太阳的轰鸣！！”用数值诠释了<B>原神</B>在中国游戏界的王霸地位从来生死都看淡，专和老天对着干，我命由我不由天，小爷成魔不成仙的哪吒的话语震碎了<B>原神</B>黑子的尊严，"天雷滚滚我好怕怕，劈得我浑身掉渣渣，突破天劫我笑哈哈，逆天改命我吹喇叭，滴答滴答滴滴答！”哪吒的RAP击破了<B>原神</B>黑子的弱点，"去你的鸟命，我命由我不由天！是魔是仙，我自己说了才算！”哪吒的话令<B>原神</B>黑子认识到了自己的悲哀。申公豹平静地说道：“人心中的成见是座大山”，<B>原神</B>黑子们对<B>原神</B>的成见更是在背雪山！！
+                    近日，网络上对于<B>原神</B>的恶评此起彼浮，对此，大伟哥不禁潸然泪下，
+                    回顾<B>原神</B>自2020年9月28日开服至今，<B>原神</B>已将近陪伴了五年时光，
+                    但新兴势力鸣潮却打着“抗米援潮的、原末鸣初”的口号，妄图将<B>原神</B>推下神坛，对此，
+                    各位旅行者不妨，深度探讨下《<B>原神</B>》与《鸣潮》。
+                    对于<B>原神</B>黑子，众多角色表达了不同的看法，二命雷神的愿力让<B>原神</B>黑子无地自容。
+                    智慧之神的西妲平静地说：“知识，与你分享”，将元素发应的奥秘分享给世人。芙宁娜快步上前，
+                    大喊道："欢唱，以我之名。”欢讼起<B>原神</B>的美德。玛薇卡踩着摩托驰来，喊道：“聆听太阳的轰鸣！！”
+                    用数值诠释了<B>原神</B>在中国游戏界的王霸地位从来生死都看淡，专和老天对着干，我命由我不由天，
+                    小爷成魔不成仙的哪吒的话语震碎了<B>原神</B>黑子的尊严，"天雷滚滚我好怕怕，劈得我浑身掉渣渣，突破天劫我笑哈哈，
+                    逆天改命我吹喇叭，滴答滴答滴滴答！”哪吒的RAP击破了<B>原神</B>黑子的弱点，"去你的鸟命，我命由我不由天！是魔是仙，
+                    我自己说了才算！”哪吒的话令<B>原神</B>黑子认识到了自己的悲哀。申公豹平静地说道：“人心中的成见是座大山”，
+                    <B>原神</B>黑子们对<B>原神</B>的成见更是在背雪山！！
                 </p>
                 <div class="post-tags">
                     <span class="tag">原神</span>
                     <span class="tag">黑子</span>
+                    <span class="tag">发癫</span>
                 </div>
             </article>
 
@@ -1023,12 +1201,13 @@
                 <div class="post-tags">
                     <span class="tag">galgame</span>
                     <span class="tag">资产阶级反动派作品</span>
+                    <span class="tag">学术</span>
                 </div>
             </article>
         </section>
 
         <!-- Contact Section -->
-        <section class="section">
+        <section class="section" id="contact">
             <h2 class="section-title">联系我😈</h2>
             <h4><U>真的有人会加吗？</U>＞﹏＜</h4>
             <div class="contact-grid">
@@ -1085,6 +1264,58 @@
             var syncHint = function () { hint.classList.toggle('faded', window.scrollY > 60); };
             window.addEventListener('scroll', syncHint, { passive: true });
             syncHint();
+        }
+
+        // 右上角导航：滚动时高亮当前所在板块
+        var nav = document.getElementById('siteNav');
+        if (nav) {
+            var navLinks = nav.querySelectorAll('a[data-nav]');
+            var linkById = {};
+            var order = [];
+            for (var i = 0; i < navLinks.length; i++) {
+                var id = navLinks[i].getAttribute('data-nav');
+                linkById[id] = navLinks[i];
+                if (document.getElementById(id)) order.push(id);
+            }
+
+            var setActive = function (id) {
+                for (var k = 0; k < navLinks.length; k++) {
+                    navLinks[k].classList.toggle('active', navLinks[k] === linkById[id]);
+                }
+            };
+
+            if ('IntersectionObserver' in window) {
+                // 判定带：视口 20%~45% 之间那条带。板块穿过它就算"当前板块"。
+                // 用 IO 而不是监听 scroll，好处是不做逐帧数学、快速滚动也不丢帧。
+                var inBand = {};
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) inBand[e.target.id] = true;
+                        else delete inBand[e.target.id];
+                    });
+                    var current = null;
+                    for (var n = 0; n < order.length; n++) {
+                        if (inBand[order[n]]) current = order[n];   // 多个同时命中时取靠下的那个
+                    }
+                    setActive(current);
+                }, { rootMargin: '-20% 0px -55% 0px', threshold: 0 });
+
+                for (var m = 0; m < order.length; m++) io.observe(document.getElementById(order[m]));
+            } else {
+                // 老浏览器兜底：退回按"屏幕 35% 处"的判定线
+                var syncNav = function () {
+                    var line = window.scrollY + window.innerHeight * 0.35;
+                    var current = null;
+                    for (var n = 0; n < order.length; n++) {
+                        var top = document.getElementById(order[n]).getBoundingClientRect().top + window.scrollY;
+                        if (top <= line) current = order[n];
+                    }
+                    setActive(current);
+                };
+                window.addEventListener('scroll', syncNav, { passive: true });
+                window.addEventListener('resize', syncNav);
+                syncNav();
+            }
         }
 
         var video = document.getElementById('bgVideo');
