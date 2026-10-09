@@ -586,6 +586,11 @@
             line-height: 1.8;
         }
 
+        /* 关于我里的分行条目：行距收紧，别像 8 个独立段落那样拉太开 */
+        .about-lines {
+            margin: 4px 0;
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -1111,15 +1116,15 @@
             <p class="about-text">
                 我是谁？我不知道。但我知道我饿了🤤<S>(等一等会有看板娘出来)</S>
             </p>
-            <p><B>正经而言 尝试过comfyui部署anima，realvisxl,z-image与ACE-Step等模型，进行文生图，图生图，文生音等美术资产创作
-而用Lm studio本地部署Qwen3.6-35B-A3B Q4_K_P与Gemma-4-E4B，也试过将其链接到SillyTavernLauncher耍起
-看得懂html与css，足以独立制作静态网页，借助ai编写js可以实现更多交互功能
-了解git和github的储存，回滚与合并
-linux在VMware虚拟机上的安装（成功运行，但Arch的N卡驱动没搞好）
-<S>尝试过Gotod的横板跳跃游戏制作(有点忘记了)</S>
-在阿里云服务器（白嫖的2核2G）上借助ai部署过qq聊天机器人，明白服务器运行的基本原理
-熟悉电脑的各种基础工具idm，7‐Zip，油猴，Fences等等等
-</B></p>
+            <!-- 一行一条：用多个 <p> 分行（<div> 不能放进 <p> 里，会被解析器提前截断） -->
+            <p class="about-text about-lines"><B>⩥正经而言 尝试过comfyui部署anima，realvisxl,z-image与ACE-Step等模型，进行文生图，图生图，文生音等美术资产创作</B></p>
+            <p class="about-text about-lines"><B>⩥用Lm studio本地部署Qwen3.6-35B-A3B Q4_K_P与Gemma-4-E4B，也试过将其链接到SillyTavernLauncher耍起</B></p>
+            <p class="about-text about-lines"><B>⩥看得懂html与css，足以独立制作静态网页，借助ai编写js可以实现更多交互功能</B></p>
+            <p class="about-text about-lines"><B>⩥了解git和github的储存，回滚与合并</B></p>
+            <p class="about-text about-lines"><B>⩥linux在VMware虚拟机上的安装（成功运行，但Arch的N卡驱动没搞好）</B></p>
+            <p class="about-text about-lines"><B>⩥<S>尝试过Gotod的横板跳跃游戏制作(有点忘记了)</S></B></p>
+            <p class="about-text about-lines"><B>⩥在阿里云服务器（白嫖的2核2G）上借助ai部署过qq聊天机器人，明白服务器运行的基本原理</B></p>
+            <p class="about-text about-lines"><B>⩥熟悉电脑的各种基础工具idm，7‐Zip，油猴，Fences等等等</B></p>
         </section>
 
         <!-- Career Section -->
