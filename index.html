@@ -416,6 +416,33 @@
             }
         }
 
+        /* =========================================
+           渐入（滚动显现）
+           关键设计：隐藏状态写成 .js-reveal .reveal —— 两个类都由 JS 加上，
+           所以 JS 没跑、报错、或被禁用时，页面依然是完整可见的，绝不白屏。
+           ========================================= */
+        .js-reveal .reveal {
+            opacity: 0;
+            transform: translateY(22px);
+            transition: opacity .75s cubic-bezier(.22, .61, .36, 1),
+                        transform .75s cubic-bezier(.22, .61, .36, 1);
+        }
+
+        .js-reveal .reveal.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        @keyframes navFadeDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* 导航从上方轻轻落下 */
+        .site-nav {
+            animation: navFadeDown .9s cubic-bezier(.22, .61, .36, 1) .1s backwards;
+        }
+
         /* 系统开了“减少动态效果”就干脆别播视频、别画曲线、别让提示上下浮动 */
         @media (prefers-reduced-motion: reduce) {
             html {
@@ -428,7 +455,8 @@
                 display: none;
             }
 
-            .hero-hint {
+            .hero-hint,
+            .site-nav {
                 animation: none;
             }
         }
@@ -995,6 +1023,16 @@
             }
         }
     </style>
+    <script>
+    /* 渐入开关：必须在 body 渲染前决定，否则会先看到内容再"闪"一下变透明。
+       开了"减少动态效果"就完全不启用，内容直接可见。 */
+    (function () {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            document.documentElement.className += ' js-reveal';
+        } catch (e) { /* 万一出错就不用渐入，保证内容可见 */ }
+    })();
+    </script>
 </head>
 <body>
     <!-- 动态背景：整页循环播放的壁纸视频 -->
@@ -1317,6 +1355,65 @@ linux在VMware虚拟机上的安装（成功运行，但Arch的N卡驱动没搞�
                 syncNav();
             }
         }
+
+        // 渐入：滚动到哪儿，哪儿淡入上浮
+        // 用 scroll 事件而不是 IntersectionObserver，是为了逻辑可预测、便于排查；
+        // 并且整段包了 try —— 出任何意外就把隐藏类摘掉，内容立刻全部可见。
+        (function () {
+            if (document.documentElement.className.indexOf('js-reveal') === -1) return;
+
+            var pending = [];
+            var items = document.querySelectorAll('.section, .post-card');
+            for (var i = 0; i < items.length; i++) {
+                items[i].classList.add('reveal');
+                pending.push(items[i]);
+            }
+            if (!pending.length) return;
+
+            var revealInView = function () {
+                var vh = window.innerHeight || 800;
+                var rest = [];
+                for (var k = 0; k < pending.length; k++) {
+                    // 元素顶边进入视口下方 92% 以内（或已经在视口上方）就算"该出现了"
+                    if (pending[k].getBoundingClientRect().top < vh * 0.92) {
+                        pending[k].classList.add('visible');
+                    } else {
+                        rest.push(pending[k]);
+                    }
+                }
+                pending = rest;
+                if (!pending.length) {
+                    window.removeEventListener('scroll', onScroll);
+                    window.removeEventListener('resize', onScroll);
+                }
+            };
+
+            var ticking = false;
+            var onScroll = function () {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(function () { ticking = false; revealInView(); });
+            };
+
+            try {
+                window.addEventListener('scroll', onScroll, { passive: true });
+                window.addEventListener('resize', onScroll);
+                revealInView();                                   // 首屏先处理一遍
+                window.addEventListener('load', function () {     // 图片/字体加载完位置会变，再补一次
+                    revealInView();
+                });
+
+                // 兜底轮询：万一某些环境下 scroll 事件不响应，也保证内容一定会出现。
+                // 待显现的元素清空后自己停掉，不留常驻定时器。
+                var guard = setInterval(function () {
+                    revealInView();
+                    if (!pending.length) clearInterval(guard);
+                }, 1500);
+            } catch (err) {
+                // 兜底：任何一个环节出问题，就把隐藏类摘掉，绝不让内容消失
+                for (var m = 0; m < pending.length; m++) pending[m].classList.remove('reveal');
+            }
+        })();
 
         var video = document.getElementById('bgVideo');
         if (!video) return;
