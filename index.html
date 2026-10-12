@@ -591,6 +591,51 @@
             margin: 4px 0;
         }
 
+        /* =========================================
+           留言板（utterances：评论区跑在 iframe 里，
+           里面的样式改不了，所以外观靠外面这层玻璃卡片撑住）
+           ========================================= */
+        .comment-hint {
+            margin-bottom: 14px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-light);
+        }
+
+        .comment-card {
+            padding: 18px;
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-edge);
+            border-radius: 12px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        #utterances {
+            min-height: 260px;            /* 先占住高度，加载完不会把页面猛地撑开 */
+        }
+
+        .comment-loading {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        #utterances .utterances {
+            max-width: 100% !important;   /* utterances 自带限宽，小屏别溢出 */
+        }
+
+        @media (max-width: 700px) {
+            .comment-card {
+                padding: 10px;
+            }
+
+            #utterances {
+                min-height: 220px;
+            }
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -1086,6 +1131,7 @@
         <a href="#works" data-nav="works">我的成就</a>
         <a href="#feed" data-nav="feed">最新动向</a>
         <a href="#contact" data-nav="contact">联系我</a>
+        <a href="#comments" data-nav="comments">留言</a>
     </nav>
 
     <div class="container" id="main">
@@ -1290,6 +1336,21 @@
             </div>
         </section>
 
+        <!-- Comments Section -->
+        <section class="section" id="comments">
+            <h2 class="section-title">留言板 说点什么吧💬</h2>
+            <p class="comment-hint">
+                用 GitHub 账号登录就能留言（没账号的话点右下角注册一个，30 秒的事）。
+                留言会存进这个站点的 GitHub Issues 里，公开可见。
+            </p>
+            <div class="comment-card">
+                <!-- utterances 会把自己替换成评论区 iframe 塞进这里，脚本在页面底部按需加载 -->
+                <div id="utterances">
+                    <p class="comment-loading">评论区加载中…</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Footer -->
         <footer>
             <p>© 2026 闽越王. 为沈理计协任务所构建</p>
@@ -1418,6 +1479,39 @@
                 // 兜底：任何一个环节出问题，就把隐藏类摘掉，绝不让内容消失
                 for (var m = 0; m < pending.length; m++) pending[m].classList.remove('reveal');
             }
+        })();
+
+        // 留言板：滚到附近才加载 utterances（省一次网络往返，首屏更快）
+        (function () {
+            var box = document.getElementById('utterances');
+            if (!box) return;
+            var loaded = false;
+
+            function loadComments() {
+                if (loaded) return;
+                loaded = true;
+                box.innerHTML = '';                 // 清掉"加载中"占位
+                var s = document.createElement('script');
+                s.src = 'https://utteranc.es/client.js';
+                s.async = true;
+                s.crossOrigin = 'anonymous';
+                s.setAttribute('repo', 'SHUIZHILANLL/xuexi-ceshi');
+                s.setAttribute('issue-term', '留言板');
+                s.setAttribute('label', 'comment');
+                s.setAttribute('theme', 'github-light');
+                box.appendChild(s);
+            }
+
+            if ('IntersectionObserver' in window) {
+                var cmtIo = new IntersectionObserver(function (entries) {
+                    for (var i = 0; i < entries.length; i++) {
+                        if (entries[i].isIntersecting) { loadComments(); cmtIo.disconnect(); break; }
+                    }
+                }, { rootMargin: '600px 0px' });
+                cmtIo.observe(box);
+            }
+            // 兜底：无论是否触发到，8 秒后也加载，避免评论区永远空白
+            setTimeout(loadComments, 8000);
         })();
 
         var video = document.getElementById('bgVideo');
