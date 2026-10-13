@@ -1383,38 +1383,13 @@
             }
         }
 
-        /* =========================================
-           点击猫咪向上飘
-           ========================================= */
-        .cat-float {
-            position: fixed;
-            left: 0;
-            top: 0;
-            line-height: 1;
-            pointer-events: none;
-            z-index: 9999;
-            will-change: transform, opacity;
-            animation: catFloatUp var(--dur) cubic-bezier(.22, .61, .36, 1) forwards;
-        }
-
         /* 跟鼠猫：oneko 脚本把 z-index 写成 2147483647（压住一切），
-           这里用 !important 把它压到导航和面板下面，免得猫在按钮上乱晃 */
+           这里用 !important 把它压到导航和面板下面，免得猫在按钮上乱晃。
+           精灵图是纯黑白线稿，所以先用 sepia 上色再转色相染成粉色
+           （黑描边基本不受影响，白毛变粉）。 */
         #oneko {
             z-index: 25 !important;
-        }
-
-        @keyframes catFloatUp {
-            from {
-                transform: translate(-50%, -50%) translate(0, 0) scale(var(--s)) rotate(0deg);
-                opacity: 0;
-            }
-            15% {
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(var(--s)) rotate(var(--rot));
-                opacity: 0;
-            }
+            filter: sepia(1) saturate(11) hue-rotate(288deg) brightness(0.88) contrast(1.05);
         }
     </style>
     <script>
@@ -2697,64 +2672,6 @@
         window.addEventListener('resize', function () { resize(); reset(); });
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) stop(); else start();     // 后台停掉，省电
-        });
-    })();
-    </script>
-
- 
-    <script>
-    (function () {
-        const CATS = ['🐱', '😺', '😸', '😻', '😽', '🙀', '😹', '😼'];
-        let lastSpawn = 0;
-
-        function spawnCat(x, y) {
-            const el = document.createElement('span');
-            el.className = 'cat-float';
-            el.textContent = CATS[Math.floor(Math.random() * CATS.length)];
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-
-            // —— 方向统一向上 ——
-            const rise = 180 + Math.random() * 260;      
-            const drift = (Math.random() - 0.5) * 160;   
-            // —— 其余保持随机 ——
-            const dur = 1.4 + Math.random() * 1.2;       
-            const scale = 0.7 + Math.random() * 0.9;     
-            const rot = (Math.random() - 0.5) * 60;      
-            const size = 22 + Math.random() * 26;        
-
-            el.style.fontSize = size + 'px';
-            el.style.setProperty('--dx', drift + 'px');
-            el.style.setProperty('--dy', -rise + 'px');  
-            el.style.setProperty('--dur', dur + 's');
-            el.style.setProperty('--s', scale);
-            el.style.setProperty('--rot', rot + 'deg');
-
-            document.body.appendChild(el);
-            el.addEventListener('animationend', () => el.remove());
-        }
-
-        document.addEventListener('pointerdown', function (e) {
-           
-            if (e.target.closest('a, button, input, textarea, select')) return;
-
-       
-            const now = Date.now();
-            if (now - lastSpawn < 40) return;
-            lastSpawn = now;
-
-            spawnCat(e.clientX, e.clientY);
-
-        
-            const extra = 2 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < extra; i++) {
-                setTimeout(function () {
-                    spawnCat(
-                        e.clientX + (Math.random() - 0.5) * 70,
-                        e.clientY + (Math.random() - 0.5) * 30
-                    );
-                }, i * 70 + Math.random() * 60);
-            }
         });
     })();
     </script>
