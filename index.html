@@ -39,6 +39,12 @@
             --veil-a: rgba(255, 255, 255, 0.12);
             --veil-b: rgba(255, 255, 255, 0.02);
 
+            /* 鼠标光晕强度 + 开屏加载层配色 */
+            --glow-alpha: 0.5;
+            --loader-bg: rgba(247, 241, 255, 0.9);
+            --loader-fg: #4a2d6b;
+            --loader-bar-bg: rgba(120, 90, 160, 0.18);
+
             color-scheme: light;
         }
 
@@ -68,6 +74,11 @@
             --veil-radial: rgba(8, 3, 16, 0.62);
             --veil-a: rgba(16, 8, 28, 0.3);
             --veil-b: rgba(16, 8, 28, 0.08);
+
+            --glow-alpha: 0.75;
+            --loader-bg: rgba(15, 8, 24, 0.92);
+            --loader-fg: #eeb2ff;
+            --loader-bar-bg: rgba(238, 178, 255, 0.16);
 
             color-scheme: dark;
         }
@@ -1416,6 +1427,94 @@
             z-index: 25 !important;
             filter: sepia(1) saturate(11) hue-rotate(288deg) brightness(0.88) contrast(1.05);
         }
+
+        /* =========================================
+           鼠标光晕
+           压在正文下面、柔光上面：玻璃面板的 backdrop-filter 会顺便把它晕开，
+           不像浮在最上层那样糊住文字。由 JS 注入，触屏/减少动态效果时不创建。
+           ========================================= */
+        .cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 320px;
+            margin: -160px 0 0 -160px;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            /* 注意：这里不要用 mix-blend-mode: screen —— 实测在该渲染路径下它是空操作
+               （纯红都画不出来），改用普通混合，效果可被像素验证。 */
+            background: radial-gradient(circle,
+                rgba(238, 178, 255, 0.62) 0%,
+                rgba(198, 138, 255, 0.3) 36%,
+                rgba(238, 178, 255, 0) 70%);
+            transition: opacity 0.6s ease;
+            will-change: transform;
+        }
+
+        .cursor-glow.on {
+            opacity: var(--glow-alpha);
+        }
+
+        /* =========================================
+           开屏加载层
+           同样由 JS 注入（不是写死在 HTML 里）：万一脚本挂了，
+           页面上根本不存在这一层，内容绝不会被永久遮住。
+           ========================================= */
+        .preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: var(--loader-bg);
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            opacity: 1;
+            transition: opacity 0.55s ease;
+        }
+
+        .preloader.done {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .preloader-text {
+            font-family: '8bit Operator Plus', ui-monospace, Consolas, monospace;
+            font-size: clamp(14px, 2.2vw, 22px);
+            letter-spacing: 0.22em;
+            color: var(--loader-fg);
+            text-shadow: 0 0 14px rgba(238, 178, 255, 0.6);
+        }
+
+        .preloader-bar {
+            width: min(58vw, 320px);
+            height: 4px;
+            overflow: hidden;
+            background: var(--loader-bar-bg);
+            border-radius: 999px;
+        }
+
+        .preloader-bar i {
+            display: block;
+            width: 0;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #b98cff, #eeb2ff, #ffb7d6);
+            transition: width 0.25s ease;
+        }
+
+        .preloader-pct {
+            font-family: '8bit Operator Plus', ui-monospace, Consolas, monospace;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            color: var(--loader-fg);
+            opacity: 0.75;
+        }
     </style>
     <script>
     /* 两件必须在 body 渲染前决定的事：
@@ -1436,6 +1535,74 @@
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             root.className += ' js-reveal';
         } catch (e) { /* 万一出错就不用渐入，保证内容可见 */ }
+    })();
+    </script>
+    <script>
+    /* 开屏加载层：同样在 body 之前就把这层挂上（否则会先闪一下正文）。
+       两个安全设计：
+       1) 这层是脚本凭空造出来的 —— 脚本挂了，页面上根本不存在它，内容不会被遮死；
+       2) 这里还挂了一个 6 秒硬上限，就算后面的脚本全没跑，它也会自己撤掉。 */
+    (function () {
+        try {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            var el = document.createElement('div');
+            el.className = 'preloader';
+            el.id = 'preloader';
+            el.setAttribute('aria-hidden', 'true');
+            el.innerHTML =
+                '<div class="preloader-text">LOADING…</div>' +
+                '<div class="preloader-bar"><i></i></div>' +
+                '<div class="preloader-pct">0%</div>';
+            document.documentElement.appendChild(el);
+
+            window.__preloaderKill = setTimeout(function () {
+                var p = document.getElementById('preloader');
+                if (!p) return;
+                p.className = 'preloader done';
+                setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 700);
+            }, 6000);
+
+            /* 鼠标光晕也在这里创建：和加载层同一条路 ——
+               head 阶段 body 还不存在，挂到 documentElement 上是"能被渲染"的
+               （实测：body 之后再往 documentElement 追加的元素不会被渲染，
+               而在 body 末尾往 body 追加又会取不到 body，所以统一放这儿最稳）。
+               光晕本体是 position:fixed，挂在哪里都覆盖整屏。 */
+            if (!window.matchMedia) return;
+            if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;   // 触屏不创建
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;      // 减少动态效果不创建
+
+            var glow = document.createElement('div');
+            glow.className = 'cursor-glow';
+            glow.setAttribute('aria-hidden', 'true');
+            document.documentElement.appendChild(glow);
+
+            var tx = window.innerWidth / 2, ty = window.innerHeight * 0.35;
+            var x = tx, y = ty, raf = null, shown = false;
+
+            function glowFrame() {
+                x += (tx - x) * 0.12;      // lerp 缓动，光晕"追"着光标走而不是黏在上面
+                y += (ty - y) * 0.12;
+                glow.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+                raf = requestAnimationFrame(glowFrame);
+            }
+
+            window.addEventListener('mousemove', function (e) {
+                tx = e.clientX;
+                ty = e.clientY;
+                if (!shown) { shown = true; x = tx; y = ty; glow.className = 'cursor-glow on'; }
+                if (raf === null) raf = requestAnimationFrame(glowFrame);
+            }, { passive: true });
+
+            document.addEventListener('mouseleave', function () { glow.className = 'cursor-glow'; });
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    if (raf !== null) { cancelAnimationFrame(raf); raf = null; }
+                } else if (shown && raf === null) {
+                    raf = requestAnimationFrame(glowFrame);
+                }
+            });
+        } catch (e) { /* 出错就不显示加载层 / 光晕 */ }
     })();
     </script>
 </head>
@@ -2855,5 +3022,92 @@
         } catch (e) { /* 任何异常都不影响页面 */ }
     })();
     </script>
+
+    <!-- 开屏加载层：进度完全由真实事件驱动（字体 / 图片 / 视频缓冲），不是假计时器 -->
+    <script>
+    (function () {
+        var el = document.getElementById('preloader');
+        if (!el) return;
+        // head 里建的时候 body 还不存在，先挂在 documentElement 上（那时能正常渲染）；
+        // body 出来后把它挪进 body，避免它留在 </body> 之后那种不渲染的位置
+        if (el.parentNode !== document.body) document.body.appendChild(el);
+        var bar = el.querySelector('.preloader-bar i');
+        var pct = el.querySelector('.preloader-pct');
+        var done = 0, total = 0, finished = false;
+
+        function report() {
+            var p = total ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : 100;
+            if (bar) bar.style.width = p + '%';
+            if (pct) pct.textContent = p + '%';
+        }
+
+        function finish() {
+            if (finished) return;
+            finished = true;
+            if (window.__preloaderKill) clearTimeout(window.__preloaderKill);
+            if (bar) bar.style.width = '100%';
+            if (pct) pct.textContent = '100%';
+            el.className = 'preloader done';
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 700);
+        }
+
+        function bump(w) {
+            done += w;
+            report();
+            if (done >= total) finish();
+        }
+
+        // 权重：字体 2、每张图 1、视频 6（首屏最大的头就是那 4MB 视频）
+        var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
+            return im.currentSrc || im.src;
+        });
+        total = 2 + imgs.length + 6;
+
+        imgs.forEach(function (im) {
+            if (im.complete && im.naturalWidth) { bump(1); return; }
+            im.addEventListener('load', function () { bump(1); }, { once: true });
+            im.addEventListener('error', function () { bump(1); }, { once: true });   // 加载失败也放行
+        });
+
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () { bump(2); }, function () { bump(2); });
+        } else {
+            bump(2);
+        }
+
+        // 视频按"已缓冲比例"给分，进度是真的；加载不出来也照样放行
+        var v = document.getElementById('bgVideo');
+        var videoGiven = 0;
+        function videoPartial(ratio) {
+            var target = Math.round(ratio * 6);
+            if (target > videoGiven) { done += (target - videoGiven); videoGiven = target; report(); }
+            if (done >= total) finish();
+        }
+        if (v) {
+            v.addEventListener('progress', function () {
+                try {
+                    if (v.buffered.length && v.duration) {
+                        videoPartial(v.buffered.end(v.buffered.length - 1) / v.duration);
+                    }
+                } catch (e) {}
+            });
+            var vDone = function () { videoPartial(1); };
+            if (v.readyState >= 3) vDone();
+            v.addEventListener('canplay', vDone, { once: true });
+            v.addEventListener('canplaythrough', vDone, { once: true });
+            v.addEventListener('error', vDone, { once: true });
+            // 省流量 / 减少动态效果时视频根本不会加载，给 2.5 秒观察期后直接放行
+            setTimeout(function () { if (v.readyState < 3) videoPartial(1); }, 2500);
+        } else {
+            videoPartial(1);
+        }
+
+        window.addEventListener('load', function () { setTimeout(finish, 350); });
+        report();
+    })();
+    </script>
+
+    <!-- 鼠标光晕的创建放在 <head> 的脚本里了（那里 appendChild 一定会成功），
+         这里不再重复创建 -->
 </body>
 </html>
