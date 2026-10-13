@@ -1,0 +1,40 @@
+name: site-check
+
+# 每次推送到 main、每次 PR、以及每周一自动跑一遍
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+jobs:
+  # 站点自检：标签配平 / 内联脚本语法 / 渐入安全 / 资源引用 / 体积红线
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 运行站点自检
+        run: node scripts/check-site.mjs
+
+  # 链接检查：只报告不阻断（外链里有 GitHub、X、utteranc.es 等，
+  # 在国内网络环境本就可能超时，不该因此判失败）
+  links:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检查页面里的超链接
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --max-concurrency 4
+            --accept 200,206,429
+            --exclude 'live2d'
+            ./index.html
+          fail: false
