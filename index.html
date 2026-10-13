@@ -26,6 +26,50 @@
             --glass-soft: rgba(246, 239, 255, 0.44);
             --glass-strong: rgba(246, 239, 255, 0.62);
             --glass-edge: rgba(238, 178, 255, 0.34);
+
+            /* 其余可换肤的零碎：小标签底色、iframe 底板、照片卡片的压白层、阴影色 */
+            --chip: rgba(255, 255, 255, 0.55);
+            --plate: #ffffff;
+            --card-veil: rgba(251, 246, 255, 0.66);
+            --shadow: rgba(60, 20, 90, 0.12);
+            --shadow-strong: rgba(60, 20, 90, 0.18);
+
+            /* 视频之上那层柔光（浅色时轻微提亮，深色时压暗） */
+            --veil-radial: rgba(24, 12, 36, 0.3);
+            --veil-a: rgba(255, 255, 255, 0.12);
+            --veil-b: rgba(255, 255, 255, 0.02);
+
+            color-scheme: light;
+        }
+
+        /* =========================================
+           深色主题
+           theme 类由 <head> 里的内联脚本提前写好（避免闪一下白），
+           用户手动切换后记在 localStorage。这里只需要覆盖变量。
+           ========================================= */
+        html.dark {
+            --text: #f4edff;
+            --text-light: #d0c4e7;
+            --border: rgba(238, 178, 255, 0.18);
+
+            /* 深色下玻璃要比浅色更"实"一点：否则压在明亮壁纸上会变成中间调，
+               浅色字直接糊掉（这是实测出来的，不是猜的） */
+            --glass: rgba(20, 12, 32, 0.68);
+            --glass-soft: rgba(18, 10, 30, 0.62);
+            --glass-strong: rgba(26, 15, 42, 0.76);
+            --glass-edge: rgba(238, 178, 255, 0.26);
+
+            --chip: rgba(255, 255, 255, 0.1);
+            --plate: #16101f;
+            --card-veil: rgba(24, 14, 36, 0.7);
+            --shadow: rgba(0, 0, 0, 0.4);
+            --shadow-strong: rgba(0, 0, 0, 0.55);
+
+            --veil-radial: rgba(8, 3, 16, 0.62);
+            --veil-a: rgba(16, 8, 28, 0.3);
+            --veil-b: rgba(16, 8, 28, 0.08);
+
+            color-scheme: dark;
         }
 
         body {
@@ -122,6 +166,30 @@
             background: #eeb2ff;
         }
 
+        /* 主题切换按钮：做成和导航项同高的小圆钮 */
+        .site-nav .nav-theme {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            margin-left: 2px;
+            padding: 0;
+            font-size: .9rem;
+            line-height: 1;
+            color: #f4e9ff;
+            background: transparent;
+            border: 1px solid rgba(238, 178, 255, 0.28);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .site-nav .nav-theme:hover {
+            background: rgba(238, 178, 255, 0.22);
+            transform: rotate(-15deg);
+        }
+
         /* 点导航跳过去时，别让固定导航压住小标题 */
         .section {
             scroll-margin-top: 76px;
@@ -134,11 +202,24 @@
                 gap: 2px;
                 padding: 4px;
                 max-width: calc(100vw - 20px);
+                overflow-x: auto;                 /* 项变多了，窄屏允许横向滑动 */
+                scrollbar-width: none;
+            }
+
+            .site-nav::-webkit-scrollbar {
+                display: none;
             }
 
             .site-nav a {
                 padding: 6px 9px;
                 font-size: .76rem;
+            }
+
+            .site-nav .nav-theme {
+                width: 26px;
+                height: 26px;
+                font-size: .8rem;
+                flex: 0 0 auto;
             }
 
             .section {
@@ -170,8 +251,8 @@
             z-index: -1;
             pointer-events: none;
             background:
-                radial-gradient(120% 85% at 50% 0%, rgba(255, 255, 255, 0) 38%, rgba(24, 12, 36, 0.3) 100%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+                radial-gradient(120% 85% at 50% 0%, rgba(255, 255, 255, 0) 38%, var(--veil-radial) 100%),
+                linear-gradient(180deg, var(--veil-a), var(--veil-b));
         }
 
         /* =========================================
@@ -192,12 +273,34 @@
             z-index: -1;              /* 和背景同层，不会盖住正文 */
             pointer-events: none;
             user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
             font-family: '8bit Operator Plus', ui-monospace, Consolas, monospace;
             font-size: clamp(20px, 2.1vw, 42px);
             line-height: 1;
             letter-spacing: .06em;
             color: rgba(238, 178, 255, .9);
             text-shadow: 0 0 12px rgba(238, 178, 255, .55), 0 0 26px rgba(150, 70, 255, .35);
+        }
+
+        /* 日期那行跟着时钟一起缩放，别抢主时间 */
+        .wp-clock-date {
+            font-size: .42em;
+            letter-spacing: .2em;
+            opacity: .88;
+        }
+
+        /* 落樱粒子层：压在柔光之上、正文之下 */
+        .petals {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
         }
 
         .wp-vis {
@@ -211,23 +314,54 @@
             pointer-events: none;
         }
 
-        /* 接音频的小面板（靠右下角） */
+        /* 接音频的小面板（靠右下角）：上面一行控制，下面一行进度 */
         .wp-audio {
             position: fixed;
             right: 16px;
             bottom: 16px;
             z-index: 20;
             display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 10px 7px;
+            max-width: min(94vw, 480px);
             font: 12px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
             color: #f3e9ff;
             background: rgba(24, 14, 38, .78);
             border: 1px solid rgba(238, 178, 255, .32);
-            border-radius: 999px;
+            border-radius: 14px;
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
+        }
+
+        .wp-audio .wp-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wp-seek {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;   /* 数字等宽，秒数跳动时不抖 */
+            color: rgba(243, 233, 255, .78);
+        }
+
+        /* 选择器写到三层，是为了压过后面的 .wp-audio input[type=range]（音量条规则） */
+        .wp-audio .wp-seek input[type="range"] {
+            flex: 1;
+            width: auto;
+            min-width: 60px;
+            height: 4px;
+        }
+
+        #wpCur,
+        #wpDur {
+            flex: 0 0 auto;
+            min-width: 34px;
+            text-align: center;
         }
 
         /* 收起后的小圆钮 */
@@ -266,6 +400,8 @@
             border-radius: 999px;
             padding: 4px 10px;
             cursor: pointer;
+            flex: 0 0 auto;              /* 别被挤瘦 */
+            white-space: nowrap;         /* 「选歌」不许折成两行 */
         }
 
         .wp-audio button.main {
@@ -290,7 +426,10 @@
         }
 
         .wp-audio .msg {
-            max-width: 24ch;
+            max-width: 20ch;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             opacity: .8;
         }
 
@@ -451,7 +590,8 @@
 
             .bg-video,
             .bg-veil,
-            .wp-vis {
+            .wp-vis,
+            .petals {
                 display: none;
             }
 
@@ -616,12 +756,12 @@
             border-radius: 14px;
             -webkit-backdrop-filter: blur(10px) saturate(1.2);
             backdrop-filter: blur(10px) saturate(1.2);
-            box-shadow: 0 10px 30px rgba(60, 20, 90, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
             transition: box-shadow 0.3s ease;
         }
 
         .comment-card:hover {
-            box-shadow: 0 14px 38px rgba(60, 20, 90, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            box-shadow: 0 14px 38px var(--shadow-strong), inset 0 1px 0 rgba(255, 255, 255, 0.45);
         }
 
         /* 顶部一行：紫色小圆点 + 标题 + 来源标签，和"我的成就"的小圆点同源 */
@@ -652,7 +792,7 @@
             padding: 2px 10px;
             font-size: 0.72rem;
             color: var(--primary);
-            background: rgba(255, 255, 255, 0.6);
+            background: var(--chip);
             border: 1px solid var(--glass-edge);
             border-radius: 999px;
         }
@@ -660,10 +800,10 @@
         /* iframe 的"白瓷板"：圆角裁切，把第三方白底变成嵌进去的一块板 */
         .comment-body {
             overflow: hidden;
-            background: #fff;
+            background: var(--plate);
             border: 1px solid var(--glass-edge);
             border-radius: 10px;
-            box-shadow: inset 0 1px 3px rgba(60, 20, 90, 0.06);
+            box-shadow: inset 0 1px 3px var(--shadow);
         }
 
         #utterances {
@@ -944,7 +1084,7 @@
         }
 
         .post-card-reading::after {
-            background: rgba(251, 246, 255, 0.66);
+            background: var(--card-veil);
         }
 
         .post-card-reading .post-excerpt {
@@ -992,7 +1132,7 @@
         }
 
         .tag {
-            background: rgba(255, 255, 255, 0.55);
+            background: var(--chip);
             color: var(--primary);
             padding: 4px 12px;
             border-radius: 20px;
@@ -1163,12 +1303,23 @@
         }
     </style>
     <script>
-    /* 渐入开关：必须在 body 渲染前决定，否则会先看到内容再"闪"一下变透明。
-       开了"减少动态效果"就完全不启用，内容直接可见。 */
+    /* 两件必须在 body 渲染前决定的事：
+       1) 主题（否则会闪一下白再变深色）
+       2) 渐入开关（否则会先看到内容再"闪"一下变透明）
+       主题优先级：localStorage 里记住的选择 > 系统偏好 */
     (function () {
+        var root = document.documentElement;
+        try {
+            var saved = null;
+            try { saved = localStorage.getItem('theme'); } catch (e) {}
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var dark = saved ? saved === 'dark' : !!prefersDark;
+            root.className += dark ? ' dark' : ' light';
+        } catch (e) { /* 出错就保持默认浅色 */ }
+
         try {
             if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            document.documentElement.className += ' js-reveal';
+            root.className += ' js-reveal';
         } catch (e) { /* 万一出错就不用渐入，保证内容可见 */ }
     })();
     </script>
@@ -1181,8 +1332,14 @@
     </video>
     <div class="bg-veil" aria-hidden="true"></div>
 
+    <!-- 落樱粒子层 -->
+    <canvas class="petals" id="petals" aria-hidden="true"></canvas>
+
     <!-- 壁纸同款：像素字时钟 + 音频曲线（都在背景层） -->
-    <div class="wp-clock" id="wpClock" aria-hidden="true">--:--:--</div>
+    <div class="wp-clock" id="wpClock" aria-hidden="true">
+        <span class="wp-clock-time">--:--:--</span>
+        <span class="wp-clock-date">--月--日 --</span>
+    </div>
     <canvas class="wp-vis" id="wpVis" aria-hidden="true"></canvas>
 
     <!-- 曲线要跟着动的音乐就由网站自己播（不需要任何授权） -->
@@ -1190,13 +1347,22 @@
 
     <!-- 让曲线跟着音乐动：站内曲库播放 -->
     <div class="wp-audio" id="wpAudio">
-        <button id="wpPlay" type="button" class="main" title="播放 / 暂停">▶</button>
-        <span class="title" id="wpAudioTitle"></span>
-        <span class="msg" id="wpAudioMsg">没接声音，先呼吸</span>
-        <input id="wpVol" type="range" min="0" max="1" step="0.05" value="0.6" title="音量">
-        <button id="wpList" type="button" class="ghost" title="从站内曲库里挑一首">选歌</button>
-        <input id="wpFile" type="file" accept="audio/*" multiple class="visually-hidden">
-        <button id="wpAudioHide" type="button" class="ghost" title="收起（右下角会留一个小按钮）">×</button>
+        <div class="wp-row">
+            <button id="wpPrev" type="button" class="main" title="上一首">⏮</button>
+            <button id="wpPlay" type="button" class="main" title="播放 / 暂停">▶</button>
+            <button id="wpNext" type="button" class="main" title="下一首">⏭</button>
+            <span class="title" id="wpAudioTitle"></span>
+            <span class="msg" id="wpAudioMsg">没接声音，先呼吸</span>
+            <input id="wpVol" type="range" min="0" max="1" step="0.05" value="0.6" title="音量">
+            <button id="wpList" type="button" class="ghost" title="从站内曲库里挑一首">选歌</button>
+            <input id="wpFile" type="file" accept="audio/*" multiple class="visually-hidden">
+            <button id="wpAudioHide" type="button" class="ghost" title="收起（右下角会留一个小按钮）">×</button>
+        </div>
+        <div class="wp-seek">
+            <span id="wpCur">0:00</span>
+            <input id="wpSeek" type="range" min="0" max="1000" value="0" step="1" title="拖动跳转">
+            <span id="wpDur">0:00</span>
+        </div>
     </div>
 
     <!-- 收起后的小呼出按钮 -->
@@ -1221,6 +1387,7 @@
         <a href="#feed" data-nav="feed">最新动向</a>
         <a href="#contact" data-nav="contact">联系我</a>
         <a href="#comments" data-nav="comments">留言</a>
+        <button type="button" id="themeToggle" class="nav-theme" aria-label="切换深色 / 浅色主题" title="切换深色 / 浅色主题">🌙</button>
     </nav>
 
     <div class="container" id="main">
@@ -1579,6 +1746,65 @@
             }
         })();
 
+        // 主题切换：默认跟随系统，手动切过就记在 localStorage
+        (function () {
+            var btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            var root = document.documentElement;
+
+            function isDark() { return root.classList.contains('dark'); }
+
+            function commentTheme() { return isDark() ? 'github-dark' : 'github-light'; }
+
+            function syncBtn() {
+                btn.textContent = isDark() ? '☀️' : '🌙';
+                btn.setAttribute('aria-pressed', isDark() ? 'true' : 'false');
+            }
+
+            // 评论区在第三方 iframe 里，改主题得用 postMessage 通知它
+            function syncComments() {
+                var frame = document.querySelector('#utterances iframe.utterances-frame');
+                if (frame && frame.contentWindow) {
+                    try {
+                        frame.contentWindow.postMessage(
+                            { type: 'set-theme', theme: commentTheme() },
+                            'https://utteranc.es'
+                        );
+                    } catch (e) { /* 跨域失败就算了，不影响页面 */ }
+                }
+            }
+
+            // 供留言板加载脚本取当前主题
+            root.commentTheme = commentTheme;
+
+            syncBtn();
+
+            btn.addEventListener('click', function () {
+                var dark = !isDark();
+                root.classList.toggle('dark', dark);
+                root.classList.toggle('light', !dark);
+                try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+                syncBtn();
+                syncComments();
+            });
+
+            // 用户没手动选过时，跟随系统切换
+            if (window.matchMedia) {
+                var mq = window.matchMedia('(prefers-color-scheme: dark)');
+                var onChange = function (e) {
+                    var saved = null;
+                    try { saved = localStorage.getItem('theme'); } catch (err) {}
+                    if (saved) return;                       // 手动选过就不覆盖
+                    root.classList.toggle('dark', e.matches);
+                    root.classList.toggle('light', !e.matches);
+                    syncBtn();
+                    syncComments();
+                };
+                if (mq.addEventListener) mq.addEventListener('change', onChange);
+                else if (mq.addListener) mq.addListener(onChange);
+            }
+        })();
+
         // 留言板：滚到附近才加载 utterances（省一次网络往返，首屏更快）
         (function () {
             var box = document.getElementById('utterances');
@@ -1596,7 +1822,10 @@
                 s.setAttribute('repo', 'SHUIZHILANLL/xuexi-ceshi');
                 s.setAttribute('issue-term', '留言板');
                 s.setAttribute('label', 'comment');
-                s.setAttribute('theme', 'github-light');
+                // 跟着站点当前主题走
+                s.setAttribute('theme', document.documentElement.commentTheme
+                    ? document.documentElement.commentTheme()
+                    : 'github-light');
                 box.appendChild(s);
             }
 
@@ -1648,12 +1877,16 @@
     <!-- 壁纸同款：像素字时钟 + 音频可视化曲线 -->
     <script>
     (function () {
-        /* ---------- 时钟：24 小时制、带秒、冒号分隔（照原版脚本） ---------- */
+        /* ---------- 时钟：24 小时制带秒，下面补一行日期 + 星期 ---------- */
         var clock = document.getElementById('wpClock');
+        var clockTime = clock.querySelector('.wp-clock-time');
+        var clockDate = clock.querySelector('.wp-clock-date');
+        var WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
         function pad(n) { return (n < 10 ? '0' : '') + n; }
         function tickClock() {
             var d = new Date();
-            clock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            clockTime.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            clockDate.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + WEEK[d.getDay()];
         }
         tickClock();
         setInterval(tickClock, 250);
@@ -1851,6 +2084,8 @@
             attachElement();
             audioEl.loop = playlist.length <= 1;
             audioEl.src = src;
+            store('wpTrack', index);              // 记住听到哪首
+            updateMediaSession(name);             // 更新锁屏信息
             var p = audioEl.play();
             if (p && p.then) {
                 p.then(function () {
@@ -1905,14 +2140,119 @@
 
         audioEl.addEventListener('ended', function () {
             if (playlist.length < 2) return;
-            index = (index + 1) % playlist.length;
-            playTrack(playlist[index].src, playlist[index].name);
+            go(1);
         });
 
         volInput.addEventListener('input', function () {
             audioEl.volume = parseFloat(volInput.value);
+            store('wpVol', volInput.value);
         });
         audioEl.volume = parseFloat(volInput.value);
+
+        /* ===== 播放器增强：上一首/下一首、进度条、记忆、锁屏控制 ===== */
+        var prevBtn = document.getElementById('wpPrev');
+        var nextBtn = document.getElementById('wpNext');
+        var seekInput = document.getElementById('wpSeek');
+        var curEl = document.getElementById('wpCur');
+        var durEl = document.getElementById('wpDur');
+        var pendingSeekTo = null;        // 恢复上次进度时用
+        var lastSavedPos = 0;
+
+        function fmtTime(s) {
+            if (!isFinite(s) || s < 0) s = 0;
+            var m = Math.floor(s / 60);
+            var ss = Math.floor(s % 60);
+            return m + ':' + (ss < 10 ? '0' : '') + ss;
+        }
+
+        function store(key, val) { try { localStorage.setItem(key, String(val)); } catch (e) {} }
+        function read(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+
+        function go(delta) {
+            if (!playlist.length || !audioEl.src) return;
+            index = (index + delta + playlist.length) % playlist.length;
+            pendingSeekTo = null;
+            playTrack(playlist[index].src, playlist[index].name);
+        }
+
+        // 锁屏 / 系统媒体面板（手机上最实用的部分）
+        function updateMediaSession(name) {
+            if (!('mediaSession' in navigator)) return;
+            try {
+                if (window.MediaMetadata) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: name || '站内曲库',
+                        artist: '沈理国工 闽越王',
+                        album: '本站音乐',
+                        artwork: [
+                            { src: 'minyuewang.jpg', sizes: '256x256', type: 'image/jpeg' },
+                            { src: 'bg5.jpg', sizes: '512x512', type: 'image/jpeg' }
+                        ]
+                    });
+                }
+                navigator.mediaSession.setActionHandler('play', function () { audioEl.play(); });
+                navigator.mediaSession.setActionHandler('pause', function () { audioEl.pause(); });
+                navigator.mediaSession.setActionHandler('previoustrack', function () { go(-1); });
+                navigator.mediaSession.setActionHandler('nexttrack', function () { go(1); });
+                navigator.mediaSession.setActionHandler('seekto', function (d) {
+                    if (d && typeof d.seekTime === 'number') audioEl.currentTime = d.seekTime;
+                });
+                navigator.mediaSession.setActionHandler('seekbackward', function () {
+                    audioEl.currentTime = Math.max(0, audioEl.currentTime - 10);
+                });
+                navigator.mediaSession.setActionHandler('seekforward', function () {
+                    audioEl.currentTime = Math.min(audioEl.duration || 0, audioEl.currentTime + 10);
+                });
+            } catch (e) { /* 不支持就算了 */ }
+        }
+
+        prevBtn.addEventListener('click', function () { go(-1); });
+        nextBtn.addEventListener('click', function () { go(1); });
+
+        // 进度条：拖动时先只更新文字，松手才真正跳转（避免拖动过程中反复 seek）
+        var seeking = false;
+        seekInput.addEventListener('input', function () {
+            seeking = true;
+            if (isFinite(audioEl.duration)) {
+                curEl.textContent = fmtTime(audioEl.duration * seekInput.value / 1000);
+            }
+        });
+        seekInput.addEventListener('change', function () {
+            if (isFinite(audioEl.duration)) {
+                audioEl.currentTime = audioEl.duration * seekInput.value / 1000;
+                store('wpPos', Math.round(audioEl.currentTime));
+            }
+            seeking = false;
+        });
+
+        audioEl.addEventListener('loadedmetadata', function () {
+            durEl.textContent = fmtTime(audioEl.duration);
+            // 恢复上次进度（只恢复一次，且接近末尾就不折腾了）
+            if (pendingSeekTo != null && isFinite(audioEl.duration) && pendingSeekTo < audioEl.duration - 5) {
+                audioEl.currentTime = pendingSeekTo;
+            }
+            pendingSeekTo = null;
+        });
+
+        audioEl.addEventListener('timeupdate', function () {
+            if (!seeking && isFinite(audioEl.duration) && audioEl.duration > 0) {
+                seekInput.value = String(Math.round(audioEl.currentTime / audioEl.duration * 1000));
+                curEl.textContent = fmtTime(audioEl.currentTime);
+            }
+            // 每 5 秒记一次位置，切页/刷新后能接着听
+            if (Math.abs(audioEl.currentTime - lastSavedPos) > 5) {
+                lastSavedPos = audioEl.currentTime;
+                store('wpPos', Math.round(audioEl.currentTime));
+            }
+        });
+
+        audioEl.addEventListener('play', function () {
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        });
+        audioEl.addEventListener('pause', function () {
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            store('wpPos', Math.round(audioEl.currentTime));
+        });
 
         // 站内曲库：文件名直接内嵌，本地 file:// 打开也能用（fetch 读本地文件会被浏览器拦掉）
         var BUILTIN = [
@@ -1955,6 +2295,29 @@
         msg.textContent = CAN_ANALYSE ? '点 ▶ 开始' : '点 ▶ 开始（曲线需 http 才跟）';
         renderList();
 
+        // 恢复上次的：音量、听到哪首、听到哪儿（只装载不自动播放，浏览器本来也会拦）
+        (function restorePlayer() {
+            var v = read('wpVol');
+            if (v != null) {
+                volInput.value = v;
+                audioEl.volume = parseFloat(v);
+            }
+            var t = parseInt(read('wpTrack'), 10);
+            var pos = parseInt(read('wpPos'), 10);
+            if (playlist.length && !isNaN(t) && t >= 0 && t < playlist.length) {
+                index = t;
+                audioEl.src = playlist[t].src;
+                titleEl.textContent = playlist[t].name;
+                msg.textContent = '上次听到这儿，点 ▶ 继续';
+                updateMediaSession(playlist[t].name);
+                if (!isNaN(pos) && pos > 5) {
+                    pendingSeekTo = pos;
+                    curEl.textContent = fmtTime(pos);
+                }
+                highlight();
+            }
+        })();
+
         // 部署到 GitHub Pages 后，以 music/manifest.json 为准（本地打开读不到就忽略）
         fetch('music/manifest.json', { cache: 'no-store' }).then(function (r) {
             return r.ok ? r.json() : null;
@@ -1983,6 +2346,93 @@
     </script>
 
     <script src="https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js"></script>
+
+    <!-- 落樱粒子：轻量 canvas，18 片花瓣，切后台自动停 -->
+    <script>
+    (function () {
+        var canvas = document.getElementById('petals');
+        if (!canvas || !canvas.getContext) return;
+        // 系统开了"减少动态效果"就不画（CSS 里也已经 display:none）
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var ctx = canvas.getContext('2d');
+        var W = 0, H = 0, dpr = 1, rafId = null;
+        var COUNT = 18;
+        var petals = [];
+
+        function resize() {
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            W = window.innerWidth;
+            H = window.innerHeight;
+            canvas.width = Math.round(W * dpr);
+            canvas.height = Math.round(H * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function makePetal(initial) {
+            return {
+                x: Math.random() * W,
+                y: initial ? Math.random() * H : -20 - Math.random() * 60,
+                size: 7 + Math.random() * 11,
+                vy: 0.25 + Math.random() * 0.55,        // 下落速度
+                sway: 12 + Math.random() * 26,          // 左右摆幅
+                phase: Math.random() * Math.PI * 2,
+                rot: Math.random() * Math.PI * 2,
+                vr: (Math.random() - 0.5) * 0.02,
+                alpha: 0.32 + Math.random() * 0.38,
+                hue: 330 + Math.random() * 18           // 粉色系
+            };
+        }
+
+        function reset() {
+            petals = [];
+            for (var i = 0; i < COUNT; i++) petals.push(makePetal(true));
+        }
+
+        var last = 0;
+        function frame(now) {
+            var dt = Math.min(40, now - last);          // 切回标签时 dt 会很大，夹住防止花瓣瞬移
+            last = now;
+            ctx.clearRect(0, 0, W, H);
+            for (var i = 0; i < petals.length; i++) {
+                var p = petals[i];
+                p.y += p.vy * dt * 0.06;
+                p.rot += p.vr * dt * 0.06;
+                if (p.y > H + 30) { petals[i] = makePetal(false); continue; }
+
+                var x = p.x + Math.sin(now / 1400 + p.phase) * p.sway;
+                ctx.save();
+                ctx.translate(x, p.y);
+                ctx.rotate(p.rot);
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = 'hsl(' + p.hue + ', 85%, 78%)';
+                ctx.beginPath();
+                ctx.moveTo(0, -p.size / 2);
+                ctx.bezierCurveTo(p.size / 2, -p.size / 5, p.size / 2, p.size / 5, 0, p.size / 2);
+                ctx.bezierCurveTo(-p.size / 2, p.size / 5, -p.size / 2, -p.size / 5, 0, -p.size / 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            rafId = requestAnimationFrame(frame);
+        }
+
+        function start() {
+            if (rafId === null) { last = performance.now(); rafId = requestAnimationFrame(frame); }
+        }
+
+        function stop() {
+            if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+        }
+
+        resize();
+        reset();
+        start();
+        window.addEventListener('resize', function () { resize(); reset(); });
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) stop(); else start();     // 后台停掉，省电
+        });
+    })();
+    </script>
 
  
     <script>
