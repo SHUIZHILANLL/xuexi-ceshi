@@ -166,8 +166,9 @@
             background: #eeb2ff;
         }
 
-        /* 主题切换按钮：做成和导航项同高的小圆钮 */
-        .site-nav .nav-theme {
+        /* 主题切换 / 搜索 两个小圆钮 */
+        .site-nav .nav-theme,
+        .site-nav .nav-search {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -185,9 +186,117 @@
             transition: background 0.2s ease, transform 0.2s ease;
         }
 
-        .site-nav .nav-theme:hover {
+        .site-nav .nav-theme:hover,
+        .site-nav .nav-search:hover,
+        .site-nav .nav-search.active {
             background: rgba(238, 178, 255, 0.22);
+        }
+
+        .site-nav .nav-theme:hover {
             transform: rotate(-15deg);
+        }
+
+        /* =========================================
+           站内搜索面板
+           （单页站点不需要预建索引，直接搜 DOM）
+           ========================================= */
+        .search-panel {
+            position: fixed;
+            top: 64px;
+            right: 16px;
+            z-index: 22;
+            width: min(92vw, 400px);
+            max-height: min(64vh, 520px);
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            font: 13px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #f3e9ff;
+            background: rgba(20, 12, 32, 0.94);
+            border: 1px solid rgba(238, 178, 255, 0.32);
+            border-radius: 12px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .search-panel[hidden] {
+            display: none;
+        }
+
+        .search-panel input[type="search"] {
+            width: 100%;
+            padding: 8px 10px;
+            font: inherit;
+            color: #f3e9ff;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(238, 178, 255, 0.3);
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .search-panel input[type="search"]:focus {
+            border-color: #eeb2ff;
+        }
+
+        .search-hint {
+            margin: 8px 2px;
+            font-size: 11px;
+            color: rgba(243, 233, 255, 0.7);
+        }
+
+        .search-panel ol {
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            list-style: none;
+        }
+
+        .search-panel li button {
+            display: block;
+            width: 100%;
+            padding: 7px 8px;
+            font: inherit;
+            color: inherit;
+            text-align: left;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .search-panel li button:hover {
+            background: rgba(238, 178, 255, 0.16);
+        }
+
+        .search-panel .s-title {
+            display: block;
+            color: #eeb2ff;
+            font-weight: 600;
+        }
+
+        .search-panel .s-snippet {
+            display: block;
+            overflow: hidden;
+            font-size: 11px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            opacity: 0.82;
+        }
+
+        .search-panel mark {
+            color: #fff;
+            background: rgba(238, 178, 255, 0.38);
+            border-radius: 3px;
+        }
+
+        /* 跳过去时闪一下，让人知道落在哪 */
+        .search-flash {
+            animation: searchFlash 1.2s ease;
+        }
+
+        @keyframes searchFlash {
+            0%, 100% { box-shadow: none; }
+            30% { box-shadow: 0 0 0 3px rgba(238, 178, 255, 0.55); }
         }
 
         /* 点导航跳过去时，别让固定导航压住小标题 */
@@ -1288,6 +1397,12 @@
             animation: catFloatUp var(--dur) cubic-bezier(.22, .61, .36, 1) forwards;
         }
 
+        /* 跟鼠猫：oneko 脚本把 z-index 写成 2147483647（压住一切），
+           这里用 !important 把它压到导航和面板下面，免得猫在按钮上乱晃 */
+        #oneko {
+            z-index: 25 !important;
+        }
+
         @keyframes catFloatUp {
             from {
                 transform: translate(-50%, -50%) translate(0, 0) scale(var(--s)) rotate(0deg);
@@ -1387,8 +1502,16 @@
         <a href="#feed" data-nav="feed">最新动向</a>
         <a href="#contact" data-nav="contact">联系我</a>
         <a href="#comments" data-nav="comments">留言</a>
+        <button type="button" id="siteSearch" class="nav-search" aria-label="站内搜索" title="站内搜索（Ctrl+K）">🔍</button>
         <button type="button" id="themeToggle" class="nav-theme" aria-label="切换深色 / 浅色主题" title="切换深色 / 浅色主题">🌙</button>
     </nav>
+
+    <!-- 站内搜索面板 -->
+    <div class="search-panel" id="searchPanel" hidden>
+        <input id="searchInput" type="search" placeholder="搜标题、正文、标签…" autocomplete="off" spellcheck="false">
+        <p class="search-hint" id="searchHint">输入关键词，回车跳到第一条（Esc 关闭）</p>
+        <ol id="searchResults"></ol>
+    </div>
 
     <div class="container" id="main">
         <!-- Header -->
@@ -1803,6 +1926,150 @@
                 if (mq.addEventListener) mq.addEventListener('change', onChange);
                 else if (mq.addListener) mq.addListener(onChange);
             }
+        })();
+
+        // ===== 站内搜索：单页站点直接拿 DOM 当索引，零构建零维护 =====
+        (function () {
+            var panel = document.getElementById('searchPanel');
+            var input = document.getElementById('searchInput');
+            var list = document.getElementById('searchResults');
+            var hint = document.getElementById('searchHint');
+            var openBtn = document.getElementById('siteSearch');
+            if (!panel || !input || !list || !openBtn) return;
+
+            // 建索引：每张文章卡片一个单位；不含卡片的板块整体算一个单位
+            var units = [];
+            var sections = document.querySelectorAll('.container .section');
+            for (var i = 0; i < sections.length; i++) {
+                var sec = sections[i];
+                var cards = sec.querySelectorAll('.post-card');
+                if (cards.length) {
+                    for (var c = 0; c < cards.length; c++) {
+                        var t = cards[c].querySelector('.post-title');
+                        units.push({
+                            el: cards[c],
+                            title: (t ? t.innerText : cards[c].innerText).trim().slice(0, 40),
+                            text: cards[c].innerText.replace(/\s+/g, ' ').trim()
+                        });
+                    }
+                } else {
+                    var st = sec.querySelector('.section-title');
+                    units.push({
+                        el: sec,
+                        title: st ? st.innerText.trim() : '板块',
+                        text: sec.innerText.replace(/\s+/g, ' ').trim()
+                    });
+                }
+            }
+
+            function esc(s) {
+                return String(s).replace(/[&<>"]/g, function (m) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m];
+                });
+            }
+
+            function jump(el) {
+                closePanel();
+                try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+                catch (e) { el.scrollIntoView(); }
+                el.classList.add('search-flash');
+                setTimeout(function () { el.classList.remove('search-flash'); }, 1400);
+            }
+
+            function render(q) {
+                list.innerHTML = '';
+                list._first = null;
+                if (!q) {
+                    hint.textContent = '输入关键词，回车跳到第一条（Esc 关闭）';
+                    return;
+                }
+                var lower = q.toLowerCase();
+                var hits = [];
+                for (var k = 0; k < units.length; k++) {
+                    var u = units[k];
+                    var pos = u.text.toLowerCase().indexOf(lower);
+                    var inTitle = u.title.toLowerCase().indexOf(lower) >= 0;
+                    if (pos >= 0 || inTitle) hits.push({ u: u, pos: pos });
+                }
+                if (!hits.length) {
+                    hint.textContent = '没找到「' + q + '」，换个词试试';
+                    return;
+                }
+                hint.textContent = '找到 ' + hits.length + ' 处，点一条跳过去';
+
+                hits.slice(0, 12).forEach(function (h) {
+                    var start = h.pos >= 0 ? Math.max(0, h.pos - 16) : 0;
+                    var snip = h.u.text.slice(start, start + 60);
+                    var idx = snip.toLowerCase().indexOf(lower);
+                    var html = esc(snip);
+                    if (idx >= 0) {
+                        html = esc(snip.slice(0, idx)) +
+                               '<mark>' + esc(snip.slice(idx, idx + q.length)) + '</mark>' +
+                               esc(snip.slice(idx + q.length));
+                    }
+                    var li = document.createElement('li');
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.innerHTML = '<span class="s-title">' + esc(h.u.title) + '</span>' +
+                                  '<span class="s-snippet">' + (start > 0 ? '…' : '') + html + '…</span>';
+                    b.addEventListener('click', function () { jump(h.u.el); });
+                    li.appendChild(b);
+                    list.appendChild(li);
+                });
+                list._first = hits[0].u.el;
+            }
+
+            function openPanel() {
+                panel.hidden = false;
+                openBtn.classList.add('active');
+                input.value = '';
+                list.innerHTML = '';
+                list._first = null;
+                hint.textContent = '输入关键词，回车跳到第一条（Esc 关闭）';
+                input.focus();
+            }
+
+            function closePanel() {
+                panel.hidden = true;
+                openBtn.classList.remove('active');
+            }
+
+            openBtn.addEventListener('click', function () {
+                if (panel.hidden) openPanel(); else closePanel();
+            });
+
+            var timer = null;
+            input.addEventListener('input', function () {
+                clearTimeout(timer);
+                var q = input.value.trim();
+                timer = setTimeout(function () { render(q); }, 120);
+            });
+
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (list._first) jump(list._first);
+                } else if (e.key === 'Escape') {
+                    closePanel();
+                }
+            });
+
+            // Ctrl/Cmd+K 开关搜索
+            document.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    if (panel.hidden) openPanel(); else closePanel();
+                } else if (e.key === 'Escape' && !panel.hidden) {
+                    closePanel();
+                }
+            });
+
+            // 点面板外面收起来
+            document.addEventListener('pointerdown', function (e) {
+                if (panel.hidden) return;
+                if (e.target.closest && e.target.closest('.search-panel, #siteSearch')) return;
+                closePanel();
+            });
         })();
 
         // 留言板：滚到附近才加载 utterances（省一次网络往返，首屏更快）
@@ -2489,6 +2756,88 @@
                 }, i * 70 + Math.random() * 60);
             }
         });
+    })();
+    </script>
+
+    <!-- 跟鼠猫（oneko.js，MIT）：只在"有真实鼠标的宽屏"加载；触屏 / 窄屏 / 减少动态效果 都不加载 -->
+    <script>
+    (function () {
+        try {
+            var mq = window.matchMedia;
+            if (!mq) return;
+            if (!mq('(hover: hover) and (pointer: fine)').matches) return;   // 触屏设备跳过
+            if (window.innerWidth < 900) return;                            // 窄屏跳过
+            if (mq('(prefers-reduced-motion: reduce)').matches) return;     // 减少动态效果跳过
+
+            var s = document.createElement('script');
+            s.src = 'vendor/oneko.js';
+            s.dataset.cat = 'vendor/oneko.gif';   // oneko 支持用 data-cat 指定精灵图
+            s.defer = true;
+            document.body.appendChild(s);
+        } catch (e) { /* 加载失败就当没有这只猫 */ }
+    })();
+    </script>
+
+    <!-- 彩带（canvas-confetti，ISC）：首次需要时才加载，颜色跟站点主题一致 -->
+    <script>
+    (function () {
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) return;
+
+        var loading = false, queued = null;
+        var COLORS = ['#eeb2ff', '#ffb7d6', '#c8a2ff', '#ffffff'];
+
+        function withConfetti(fn) {
+            if (window.confetti) { fn(window.confetti); return; }
+            queued = fn;
+            if (loading) return;
+            loading = true;
+            var s = document.createElement('script');
+            s.src = 'vendor/confetti.browser.js';
+            s.onload = function () {
+                if (queued) { var f = queued; queued = null; f(window.confetti); }
+            };
+            document.body.appendChild(s);
+        }
+
+        // 1) 随便点一下：小口气，带节流，别刷屏
+        var lastPuff = 0;
+        document.addEventListener('pointerdown', function (e) {
+            if (e.target.closest && e.target.closest('a, button, input, textarea, select, .site-nav, .wp-audio, .wp-list, .search-panel')) return;
+            var now = Date.now();
+            if (now - lastPuff < 350) return;
+            lastPuff = now;
+            withConfetti(function (c) {
+                c({
+                    particleCount: 14,
+                    spread: 55,
+                    startVelocity: 28,
+                    gravity: 0.9,
+                    scalar: 0.75,
+                    ticks: 130,
+                    origin: { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight },
+                    colors: COLORS,
+                    disableForReducedMotion: true
+                });
+            });
+        }, { passive: true });
+
+        // 2) 点头像：来一发大的
+        var avatar = document.querySelector('.avatar');
+        if (avatar) {
+            avatar.style.cursor = 'pointer';
+            avatar.title = '点我一下试试';
+            avatar.addEventListener('click', function () {
+                withConfetti(function (c) {
+                    var end = Date.now() + 900;
+                    (function frame() {
+                        c({ particleCount: 5, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, colors: COLORS, disableForReducedMotion: true });
+                        c({ particleCount: 5, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, colors: COLORS, disableForReducedMotion: true });
+                        if (Date.now() < end) requestAnimationFrame(frame);
+                    })();
+                });
+            });
+        }
     })();
     </script>
 </body>
