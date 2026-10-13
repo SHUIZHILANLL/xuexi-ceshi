@@ -987,6 +987,24 @@
             border: 0;
         }
 
+        /* 评论区的兜底提示：接口被挡时至少告诉人发生了什么、以及去哪儿留言 */
+        .comment-fallback {
+            margin: 10px 2px 2px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        .comment-fallback a {
+            color: var(--primary);
+            text-decoration: none;
+            border-bottom: 1px dashed currentColor;
+        }
+
+        .comment-fallback a:hover {
+            border-bottom-style: solid;
+        }
+
         @media (max-width: 700px) {
             .comment-card {
                 padding: 10px;
@@ -1561,7 +1579,7 @@
                 if (!p) return;
                 p.className = 'preloader done';
                 setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 700);
-            }, 6000);
+            }, 12000);
 
             /* 鼠标光晕也在这里创建：和加载层同一条路 ——
                head 阶段 body 还不存在，挂到 documentElement 上是"能被渲染"的
@@ -1903,6 +1921,9 @@
                         </p>
                     </div>
                 </div>
+                <p class="comment-fallback">
+                    评论区打不开？<a href="https://github.com/SHUIZHILANLL/xuexi-ceshi/issues" target="_blank" rel="noopener">直接去 GitHub Issues 留言 →</a>
+                </p>
             </div>
         </section>
 
@@ -2263,9 +2284,36 @@
             var box = document.getElementById('utterances');
             if (!box) return;
             var loaded = false;
+            var blocked = false;      // GitHub 接口不通时置位，就别再白等 utterances 了
+
+            function complain(extra) {
+                blocked = true;
+                var t = box.querySelector('.comment-loading');
+                if (!t) return;
+                t.innerHTML = '评论区加载失败：GitHub 接口被挡住了。<br>' +
+                    '常见原因：本机 hosts 或加速工具（如 Steam++ / Watt Toolkit 的"本地加速"）' +
+                    '把 api.github.com 指向了 127.0.0.1 —— 浏览器会以"本地网络访问"策略拦掉这种请求。' +
+                    '普通网络下的访客不受影响。<br>' +
+                    (extra || '') +
+                    '可以点上方的链接直接去 Issues 留言。';
+            }
+
+            // 先探一下 GitHub 接口通不通。no-cors 模式只关心"能不能连上"，
+            // 连不上就说明被网络/本机策略挡住了，这时把"加载中"换成能看懂的说明。
+            var probe = null;
+            if (window.fetch) {
+                probe = setTimeout(function () { complain(); }, 6000);
+                fetch('https://api.github.com/rate_limit', { mode: 'no-cors', cache: 'no-store' })
+                    .then(function () { clearTimeout(probe); probe = null; })
+                    .catch(function () {
+                        if (probe) { clearTimeout(probe); probe = null; }
+                        complain();
+                    });
+            }
 
             function loadComments() {
                 if (loaded) return;
+                if (blocked) return;     // 接口都被挡住了，再插 iframe 只会是一块空白
                 loaded = true;
                 box.innerHTML = '';                 // 清掉"加载中"占位
                 var s = document.createElement('script');
@@ -3075,14 +3123,19 @@
             bump(2);
         }
 
-        // 视频按"已缓冲比例"给分，进度是真的；加载不出来也照样放行
+        // 视频按"已缓冲比例"给分，进度是真的。
+        // 关键：视频必须真的能播（canplay / readyState>=3）才算完 ——
+        // 之前是"2.5 秒观察期一到就算加载完"，结果 4MB 壁纸还没就绪就放人进来了。
         var v = document.getElementById('bgVideo');
         var videoGiven = 0;
+        var videoReady = false;
         function videoPartial(ratio) {
             var target = Math.round(ratio * 6);
             if (target > videoGiven) { done += (target - videoGiven); videoGiven = target; report(); }
             if (done >= total) finish();
         }
+        function videoSettled() { videoReady = true; videoPartial(1); }
+
         if (v) {
             v.addEventListener('progress', function () {
                 try {
@@ -3091,18 +3144,39 @@
                     }
                 } catch (e) {}
             });
-            var vDone = function () { videoPartial(1); };
-            if (v.readyState >= 3) vDone();
-            v.addEventListener('canplay', vDone, { once: true });
-            v.addEventListener('canplaythrough', vDone, { once: true });
-            v.addEventListener('error', vDone, { once: true });
-            // 省流量 / 减少动态效果时视频根本不会加载，给 2.5 秒观察期后直接放行
-            setTimeout(function () { if (v.readyState < 3) videoPartial(1); }, 2500);
+            if (v.readyState >= 3) videoSettled();
+            v.addEventListener('canplay', videoSettled, { once: true });
+            v.addEventListener('canplaythrough', videoSettled, { once: true });
+            v.addEventListener('loadeddata', function () {
+                // 至少第一帧出来了；canplay 一般紧接着就到
+                videoPartial(0.85);
+            }, { once: true });
+            v.addEventListener('error', videoSettled, { once: true });   // 真加载不了就放行
         } else {
-            videoPartial(1);
+            videoSettled();      // 省流量 / 减少动态效果时压根没有视频
         }
 
-        window.addEventListener('load', function () { setTimeout(finish, 350); });
+        // 真正决定什么时候放人进来：等视频就绪（无视频、加载失败、或超时的除外）
+        function releaseWhenVideoReady() {
+            if (finished) return;
+            if (!v || videoReady) { setTimeout(finish, 300); return; }
+            if (v.networkState === 3 /* NO_SOURCE */) { videoSettled(); setTimeout(finish, 300); return; }
+
+            var t0 = Date.now();
+            var wait = setInterval(function () {
+                if (finished) { clearInterval(wait); return; }
+                // 就绪了立刻放行；实在等太久（8 秒）也别把人锁在外面
+                if (videoReady || Date.now() - t0 > 8000) {
+                    clearInterval(wait);
+                    videoSettled();
+                    finish();
+                }
+            }, 150);
+        }
+
+        // 图片/字体都到位（load）之后再等视频；即使 load 来得早，也由上面这段兜住
+        if (document.readyState === 'complete') releaseWhenVideoReady();
+        else window.addEventListener('load', releaseWhenVideoReady);
         report();
     })();
     </script>
