@@ -41,7 +41,7 @@
 
             /* 鼠标光晕强度 + 开屏加载层配色 */
             --glow-alpha: 0.5;
-            --loader-bg: rgba(247, 241, 255, 0.9);
+            --loader-bg: rgba(250, 246, 255, 0.34);
             --loader-fg: #4a2d6b;
             --loader-bar-bg: rgba(120, 90, 160, 0.18);
 
@@ -76,7 +76,7 @@
             --veil-b: rgba(16, 8, 28, 0.08);
 
             --glow-alpha: 0.75;
-            --loader-bg: rgba(15, 8, 24, 0.92);
+            --loader-bg: rgba(12, 7, 20, 0.42);
             --loader-fg: #eeb2ff;
             --loader-bar-bg: rgba(238, 178, 255, 0.16);
 
@@ -1514,8 +1514,8 @@
             justify-content: center;
             gap: 18px;
             background: var(--loader-bg);
-            -webkit-backdrop-filter: blur(6px);
-            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(12px) saturate(1.1);
+            backdrop-filter: blur(12px) saturate(1.1);
             opacity: 1;
             transition: opacity 0.55s ease;
         }
@@ -2410,11 +2410,29 @@
             video.classList.add('live');                 // 模糊占位淡出成动态壁纸
             if (typeof window.__videoLive === 'function') window.__videoLive();
         }
-        if (typeof video.requestVideoFrameCallback === 'function') {
-            try { video.requestVideoFrameCallback(function () { markLive(); }); } catch (e) {}
+        //    关键：必须"真的在播"才算 —— 暂停状态下呈现的首帧不算数，
+        //    否则加载层会在壁纸还没动的时候就撤掉。
+        var liveFrames = 0;
+        function onPresentedFrame() {
+            if (video.paused) {   // 暂停着就先不标记，继续等
+                if (typeof video.requestVideoFrameCallback === 'function') {
+                    video.requestVideoFrameCallback(onPresentedFrame);
+                }
+                return;
+            }
+            liveFrames++;
+            if (liveFrames >= 2) { markLive(); return; }   // 连续两帧 = 确实在动
+            if (typeof video.requestVideoFrameCallback === 'function') {
+                video.requestVideoFrameCallback(onPresentedFrame);
+            }
         }
-        video.addEventListener('playing', function () { setTimeout(markLive, 150); });
-        video.addEventListener('loadeddata', function () { setTimeout(markLive, 400); });   // 再退一步
+        if (typeof video.requestVideoFrameCallback === 'function') {
+            try { video.requestVideoFrameCallback(onPresentedFrame); } catch (e) {}
+        }
+        // 兜底（没有 rVFC 的浏览器）：播放时间真的在往前走，就说明画面在动
+        video.addEventListener('timeupdate', function () {
+            if (!video.paused && video.currentTime > 0.2) markLive();
+        });
         window.__videoIsLive = function () { return videoLive; };
 
         // 1) 系统开了“减少动态效果”或浏览器开了省流量，就别加载视频
@@ -3236,7 +3254,7 @@
             if (videoReady) {
                 clearInterval(wait);
                 add(total);                    // 进度条走满
-                setTimeout(finish, 250);       // 让壁纸淡入先露个脸
+                setTimeout(finish, 1000);      // 等 .bg-video 那 0.9s 淡入走完，让人真看到壁纸在动
             }
         }, 150);
 
