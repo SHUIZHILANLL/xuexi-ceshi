@@ -87,8 +87,8 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
             line-height: 1.6;
             color: var(--text);
-            /* bg.png 同时充当视频没加载出来时的兜底背景 */
-            background: #14101c url('bg.png') no-repeat center center fixed;
+            /* bg.webp 同时充当视频没加载出来时的兜底背景 */
+            background: #14101c url('bg.webp') no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -1094,7 +1094,7 @@
             right: -20px;
             bottom: -20px;
             left: -20px;
-            background: url('bg1.jpg') no-repeat center center;
+            background: url('bg1.webp') no-repeat center center;
             background-size: cover;
             filter: blur(2px);
             z-index: 0;
@@ -1124,7 +1124,7 @@
             right: -20px;
             bottom: -20px;
             left: -20px;
-            background: url('bg2.jpg') no-repeat center center;
+            background: url('bg2.webp') no-repeat center center;
             background-size: cover;
             filter: blur(2px);
             z-index: 0;
@@ -1154,7 +1154,7 @@
             right: -20px;
             bottom: -20px;
             left: -20px;
-            background: url('bg3.jpg') no-repeat center center;
+            background: url('bg3.webp') no-repeat center center;
             background-size: cover;
             filter: blur(2px);
             z-index: 0;
@@ -1206,7 +1206,7 @@
             z-index: 2;
         }
 
-        /* ===== 第五张背景：bg5.jpg（文字版块用的那张） ===== */
+        /* ===== 第五张背景：bg5.webp（文字版块用的那张） ===== */
         .post-card-bg5::before {
             content: "";
             position: absolute;
@@ -1214,7 +1214,7 @@
             right: -20px;
             bottom: -20px;
             left: -20px;
-            background: url('bg5.jpg') no-repeat center center;
+            background: url('bg5.webp') no-repeat center center;
             background-size: cover;
             filter: blur(2px);
             z-index: 0;
@@ -1234,6 +1234,21 @@
         .post-card-bg5 > * {
             position: relative;
             z-index: 2;
+        }
+
+        /* =========================================
+           卡片背景图延后加载
+           上面那几组 ::before 里的 url() 会让浏览器在首屏就把 5 张图全拉下来
+           （实测约 600KB）。这里先把背景图统一压掉，等 JS 判断"快滚到了"
+           再给卡片加 .bg-ready 并把图塞进 --card-bg。
+           没有 JS 时：卡片仍是一块可读的玻璃板（只是没有背景图），不影响看内容。
+           ========================================= */
+        .post-card[class*="post-card-bg"]::before {
+            background-image: none;
+        }
+
+        .post-card.bg-ready::before {
+            background-image: var(--card-bg);
         }
 
         /* =========================================
@@ -1627,7 +1642,7 @@
 <body>
     <!-- 动态背景：整页循环播放的壁纸视频 -->
     <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto"
-           poster="bg.png" aria-hidden="true" tabindex="-1">
+           poster="bg.webp" aria-hidden="true" tabindex="-1">
         <source src="bg-video.mp4" type="video/mp4">
     </video>
     <div class="bg-veil" aria-hidden="true"></div>
@@ -1702,7 +1717,7 @@
         <!-- Header -->
         <header>
             <div class="avatar">
-                <img src="minyuewang.jpg" alt="头像" class="avatar-img">
+                <img src="minyuewang.webp" alt="头像" class="avatar-img">
             </div>
             <h1>沈理国工 闽越王</h1>
             <p class="tagline">一条沈理国工<B>计科</B>蛆😭</p>
@@ -2071,6 +2086,35 @@
             }
         })();
 
+        // 卡片背景图延后加载：首屏不再一次性拉 5 张图（约省 600KB），滚到附近再补
+        (function () {
+            var cards = document.querySelectorAll('.post-card[class*="post-card-bg"]');
+            if (!cards.length) return;
+
+            function arm(card) {
+                var m = /post-card-bg(\d)/.exec(card.className);
+                if (!m || card.classList.contains('bg-ready')) return;
+                card.style.setProperty('--card-bg', "url('bg" + m[1] + ".webp')");
+                card.classList.add('bg-ready');
+            }
+
+            if (!('IntersectionObserver' in window)) {          // 没 IO 就全放出来
+                for (var k = 0; k < cards.length; k++) arm(cards[k]);
+                return;
+            }
+
+            var io = new IntersectionObserver(function (entries) {
+                for (var i = 0; i < entries.length; i++) {
+                    if (entries[i].isIntersecting) {
+                        arm(entries[i].target);
+                        io.unobserve(entries[i].target);
+                    }
+                }
+            }, { rootMargin: '700px 0px' });
+
+            for (var j = 0; j < cards.length; j++) io.observe(cards[j]);
+        })();
+
         // 主题切换：默认跟随系统，手动切过就记在 localStorage
         (function () {
             var btn = document.getElementById('themeToggle');
@@ -2350,7 +2394,7 @@
         var saveData = navigator.connection && navigator.connection.saveData;
         if (reduce || saveData) { video.remove(); return; }
 
-        // 2) 视频挂了就退回 bg.png，页面不会开天窗
+        // 2) 视频挂了就退回 bg.webp，页面不会开天窗
         video.addEventListener('error', function () { video.remove(); });
         var source = video.querySelector('source');
         if (source) source.addEventListener('error', function () { video.remove(); });
@@ -2686,8 +2730,8 @@
                         artist: '沈理国工 闽越王',
                         album: '本站音乐',
                         artwork: [
-                            { src: 'minyuewang.jpg', sizes: '256x256', type: 'image/jpeg' },
-                            { src: 'bg5.jpg', sizes: '512x512', type: 'image/jpeg' }
+                            { src: 'minyuewang.webp', sizes: '256x256', type: 'image/jpeg' },
+                            { src: 'bg5.webp', sizes: '512x512', type: 'image/jpeg' }
                         ]
                     });
                 }
@@ -2846,7 +2890,19 @@
     })();
     </script>
 
-    <script src="https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js"></script>
+    <!-- 看板娘：不占首屏关键路径 —— 等页面 load 之后再拉（它要下 live2d 库和模型） -->
+    <script>
+    (function () {
+        function boot() {
+            var s = document.createElement('script');
+            s.src = 'https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js';
+            s.async = true;
+            document.body.appendChild(s);
+        }
+        if (document.readyState === 'complete') setTimeout(boot, 300);
+        else window.addEventListener('load', function () { setTimeout(boot, 300); });
+    })();
+    </script>
 
     <!-- 落樱粒子：轻量 canvas，18 片花瓣，切后台自动停 -->
     <script>
