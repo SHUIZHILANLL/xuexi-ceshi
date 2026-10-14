@@ -1054,6 +1054,76 @@
             }
         }
 
+        /* =========================================
+           本站用到的项目（开源致谢）
+           样式沿用"我的成就"那套：左侧紫色竖条 + 玻璃底 + 圆角
+           ========================================= */
+        .credits-intro {
+            margin-bottom: 14px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-light);
+        }
+
+        .credits-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .credit-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-edge);
+            border-left: 3px solid #eeb2ff;
+            border-radius: 10px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .credit-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 6px 18px var(--shadow);
+        }
+
+        .credit-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .credit-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--glass-edge);
+        }
+
+        .credit-name:hover {
+            color: var(--primary);
+            border-bottom-style: solid;
+        }
+
+        .credit-tag {
+            padding: 1px 7px;
+            font-size: 0.68rem;
+            color: var(--primary);
+            background: var(--chip);
+            border: 1px solid var(--glass-edge);
+            border-radius: 999px;
+        }
+
+        .credit-desc {
+            margin-top: 4px;
+            font-size: 0.82rem;
+            line-height: 1.65;
+            color: var(--text-light);
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -1729,6 +1799,7 @@
         <a href="#works" data-nav="works">我的成就</a>
         <a href="#feed" data-nav="feed">最新动向</a>
         <a href="#contact" data-nav="contact">联系我</a>
+        <a href="#credits" data-nav="credits">开源</a>
         <a href="#comments" data-nav="comments">留言</a>
         <button type="button" id="siteSearch" class="nav-search" aria-label="站内搜索" title="站内搜索（Ctrl+K）">🔍</button>
         <button type="button" id="themeToggle" class="nav-theme" aria-label="切换深色 / 浅色主题" title="切换深色 / 浅色主题">🌙</button>
@@ -1941,6 +2012,72 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- 本站用到的项目 -->
+        <section class="section" id="credits">
+            <h2 class="section-title">本站用到的项目🔧</h2>
+            <p class="credits-intro">
+                这个站是个纯静态页面（没有后端），靠下面这些开源项目撑起来 —— 顺手记一笔，也算致谢。
+            </p>
+            <ul class="credits-list">
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://github.com/stevenjoezhang/live2d-widget" target="_blank" rel="noopener">live2d-widget</a>
+                        <span class="credit-tag">GPL-3.0</span>
+                    </div>
+                    <div class="credit-desc">左下角那只跟着鼠标说话、会换装的看板娘；模型是 Potion-Maker 的 Pio / Tia。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://github.com/adryd325/oneko.js" target="_blank" rel="noopener">oneko.js</a>
+                        <span class="credit-tag">MIT</span>
+                    </div>
+                    <div class="credit-desc">跟着鼠标跑的那只像素猫（我把它的白毛染成了粉色）。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://github.com/catdad/canvas-confetti" target="_blank" rel="noopener">canvas-confetti</a>
+                        <span class="credit-tag">ISC</span>
+                    </div>
+                    <div class="credit-desc">点击页面（点头像更明显）时撒出来的彩带，颜色按本站主题调过。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://github.com/darkroomengineering/lenis" target="_blank" rel="noopener">lenis</a>
+                        <span class="credit-tag">MIT</span>
+                    </div>
+                    <div class="credit-desc">全站的惯性平滑滚动；手机上仍是原生滚动，手感更准。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://github.com/utterance/utterances" target="_blank" rel="noopener">utterances</a>
+                        <span class="credit-tag">MIT</span>
+                    </div>
+                    <div class="credit-desc">最下面那个留言板 —— 评论不存数据库，直接存进这个仓库的 GitHub Issues。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://www.fonts4free.net/8-bit-operator-font.html" target="_blank" rel="noopener">8-bit Operator+</a>
+                        <span class="credit-tag">字体</span>
+                    </div>
+                    <div class="credit-desc">像素字体，右上角那个走秒的时钟和开屏加载层用的就是它。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://steamcommunity.com/sharedfiles/filedetails/?id=3714489524" target="_blank" rel="noopener">Wallpaper Engine</a>
+                        <span class="credit-tag">壁纸</span>
+                    </div>
+                    <div class="credit-desc">整屏动态背景的原素材：创意工坊壁纸（id 3714489524），重新压成 1080p / 15fps 后才塞进页面。</div>
+                </li>
+                <li class="credit-item">
+                    <div class="credit-head">
+                        <a class="credit-name" href="https://ffmpeg.org" target="_blank" rel="noopener">FFmpeg</a>
+                        <span class="credit-tag">工具</span>
+                    </div>
+                    <div class="credit-desc">站里所有压缩都是它干的：壁纸视频从 4.3MB 压到 1.2MB、图片全转 WebP。</div>
+                </li>
+            </ul>
         </section>
 
         <!-- Comments Section -->
