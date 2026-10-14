@@ -1671,8 +1671,8 @@
     <!-- 曲线要跟着动的音乐就由网站自己播（不需要任何授权） -->
     <audio id="wpMusic" preload="none"></audio>
 
-    <!-- 让曲线跟着音乐动：站内曲库播放 -->
-    <div class="wp-audio" id="wpAudio">
+    <!-- 让曲线跟着音乐动：站内曲库播放（默认收起，只留右下角 ♪ 小按钮） -->
+    <div class="wp-audio" id="wpAudio" style="display: none">
         <div class="wp-row">
             <button id="wpPrev" type="button" class="main" title="上一首">⏮</button>
             <button id="wpPlay" type="button" class="main" title="播放 / 暂停">▶</button>
@@ -1692,7 +1692,7 @@
     </div>
 
     <!-- 收起后的小呼出按钮 -->
-    <button id="wpAudioShow" type="button" class="wp-audio-mini" title="打开音乐控制" hidden>♪</button>
+    <button id="wpAudioShow" type="button" class="wp-audio-mini" title="打开音乐控制">♪</button>
 
     <!-- 站内曲目列表（点“选歌”展开） -->
     <div class="wp-list" id="wpListPanel" data-lenis-prevent hidden>
@@ -2922,6 +2922,11 @@
 
         /* ===== 2) 收起 / 呼出 ===== */
         var miniBtn = document.getElementById('wpAudioShow');
+
+        // 默认收起：只留右下角的 ♪ 小按钮（HTML 上已写过 inline display:none，
+        // 这里再设一遍，防止那份样式被别处覆盖）
+        panel.style.display = 'none';
+        miniBtn.hidden = false;
 
         document.getElementById('wpAudioHide').addEventListener('click', function () {
             panel.style.display = 'none';
