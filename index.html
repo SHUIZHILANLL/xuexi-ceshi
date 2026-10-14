@@ -87,10 +87,14 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
             line-height: 1.6;
             color: var(--text);
-            /* bg-blur.webp 是视频第一帧压出来的 184 字节模糊图：
+            /* bg-blur.webp 是视频第一帧压出来的模糊图：
                视频还没出来时先用它当底色，出来之后由 .bg-video 淡入盖上去 */
             background: #14101c url('bg-blur.webp') no-repeat center center fixed;
             background-size: cover;
+            /* 像素小鱼干光标（和染粉后的跟鼠猫同一套像素风）。
+               热点 39,12 = 鱼嘴尖；链接触发的 pointer 手势仍然保留，
+               所以按钮/链接上还是手型（更符合操作直觉）。 */
+            cursor: url('cursor-fish.png') 39 12, auto;
         }
 
         html {
