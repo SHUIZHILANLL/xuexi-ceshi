@@ -87,8 +87,9 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans CJK SC", sans-serif;
             line-height: 1.6;
             color: var(--text);
-            /* bg.webp 同时充当视频没加载出来时的兜底背景 */
-            background: #14101c url('bg.webp') no-repeat center center fixed;
+            /* bg-blur.webp 是视频第一帧压出来的 184 字节模糊图：
+               视频还没出来时先用它当底色，出来之后由 .bg-video 淡入盖上去 */
+            background: #14101c url('bg-blur.webp') no-repeat center center fixed;
             background-size: cover;
         }
 
@@ -384,6 +385,14 @@
             object-fit: cover;
             z-index: -2;
             pointer-events: none;
+            /* 先不显示：等 JS 确认"第一帧真的画出来了"再加 .live 淡入，
+               在那之前露出来的是 body 上那张 184 字节的模糊占位图 */
+            opacity: 0;
+            transition: opacity 0.9s ease;
+        }
+
+        .bg-video.live {
+            opacity: 1;
         }
 
         /* 视频之上压一层柔光，保证白色内容区的字还看得清 */
@@ -1594,7 +1603,7 @@
                 if (!p) return;
                 p.className = 'preloader done';
                 setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 700);
-            }, 12000);
+            }, 18000);
 
             /* 鼠标光晕也在这里创建：和加载层同一条路 ——
                head 阶段 body 还不存在，挂到 documentElement 上是"能被渲染"的
@@ -1640,9 +1649,11 @@
     </script>
 </head>
 <body>
-    <!-- 动态背景：整页循环播放的壁纸视频 -->
+    <!-- 动态背景：整页循环播放的壁纸视频。
+         poster 用的是 184 字节的模糊占位图（由视频第一帧生成），
+         视频真正画出第一帧后由 JS 加 .live 淡入，实现"模糊 → 动态"的过渡 -->
     <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto"
-           poster="bg.webp" aria-hidden="true" tabindex="-1">
+           poster="bg-blur.webp" aria-hidden="true" tabindex="-1">
         <source src="bg-video.mp4" type="video/mp4">
     </video>
     <div class="bg-veil" aria-hidden="true"></div>
@@ -2389,15 +2400,32 @@
         var video = document.getElementById('bgVideo');
         if (!video) return;
 
+        // 0) "动态背景真的出来了"的判定：以第一帧被真正呈现为准。
+        //    requestVideoFrameCallback 是唯一能确认"这一帧已经画到屏幕上"的 API；
+        //    退一步用 playing + 一点延迟，再退一步才靠超时。
+        var videoLive = false;
+        function markLive() {
+            if (videoLive) return;
+            videoLive = true;
+            video.classList.add('live');                 // 模糊占位淡出成动态壁纸
+            if (typeof window.__videoLive === 'function') window.__videoLive();
+        }
+        if (typeof video.requestVideoFrameCallback === 'function') {
+            try { video.requestVideoFrameCallback(function () { markLive(); }); } catch (e) {}
+        }
+        video.addEventListener('playing', function () { setTimeout(markLive, 150); });
+        video.addEventListener('loadeddata', function () { setTimeout(markLive, 400); });   // 再退一步
+        window.__videoIsLive = function () { return videoLive; };
+
         // 1) 系统开了“减少动态效果”或浏览器开了省流量，就别加载视频
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var saveData = navigator.connection && navigator.connection.saveData;
-        if (reduce || saveData) { video.remove(); return; }
+        if (reduce || saveData) { video.remove(); markLive(); return; }
 
-        // 2) 视频挂了就退回 bg.webp，页面不会开天窗
-        video.addEventListener('error', function () { video.remove(); });
+        // 2) 视频挂了就退回模糊底图，页面不会开天窗（同时放行加载层）
+        video.addEventListener('error', function () { video.remove(); markLive(); });
         var source = video.querySelector('source');
-        if (source) source.addEventListener('error', function () { video.remove(); });
+        if (source) source.addEventListener('error', function () { video.remove(); markLive(); });
 
         // 3) 切到后台暂停，省电省流量；切回来接着播
         document.addEventListener('visibilitychange', function () {
@@ -3127,23 +3155,26 @@
     })();
     </script>
 
-    <!-- 开屏加载层：进度完全由真实事件驱动（字体 / 图片 / 视频缓冲），不是假计时器 -->
+    <!-- 开屏加载层：进度由真实事件驱动；放行条件 = 动态背景真的画出来了 -->
     <script>
     (function () {
         var el = document.getElementById('preloader');
         if (!el) return;
-        // head 里建的时候 body 还不存在，先挂在 documentElement 上（那时能正常渲染）；
-        // body 出来后把它挪进 body，避免它留在 </body> 之后那种不渲染的位置
-        if (el.parentNode !== document.body) document.body.appendChild(el);
+
         var bar = el.querySelector('.preloader-bar i');
         var pct = el.querySelector('.preloader-pct');
-        var done = 0, total = 0, finished = false;
+        var done = 0;
+        var total = 1;
+        var finished = false;
+        var videoReady = false;
 
-        function report() {
-            var p = total ? Math.max(0, Math.min(100, Math.round(done / total * 100))) : 100;
+        function draw() {
+            var p = Math.max(0, Math.min(100, Math.round(done / total * 100)));
             if (bar) bar.style.width = p + '%';
             if (pct) pct.textContent = p + '%';
         }
+
+        function add(n) { done += n; draw(); }
 
         function finish() {
             if (finished) return;
@@ -3155,85 +3186,61 @@
             setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 700);
         }
 
-        function bump(w) {
-            done += w;
-            report();
-            if (done >= total) finish();
+        // 权重：字体 2、每张图 1、视频 6（进度条用；不决定何时放行）
+        var imgs = [];
+        for (var i = 0; i < document.images.length; i++) {
+            var im = document.images[i];
+            if (im.currentSrc || im.src) imgs.push(im);
         }
-
-        // 权重：字体 2、每张图 1、视频 6（首屏最大的头就是那 4MB 视频）
-        var imgs = Array.prototype.slice.call(document.images).filter(function (im) {
-            return im.currentSrc || im.src;
-        });
         total = 2 + imgs.length + 6;
 
-        imgs.forEach(function (im) {
-            if (im.complete && im.naturalWidth) { bump(1); return; }
-            im.addEventListener('load', function () { bump(1); }, { once: true });
-            im.addEventListener('error', function () { bump(1); }, { once: true });   // 加载失败也放行
-        });
+        for (var k = 0; k < imgs.length; k++) {
+            (function (img) {
+                if (img.complete && img.naturalWidth) { add(1); return; }
+                var one = function () { add(1); };
+                img.addEventListener('load', one, { once: true });
+                img.addEventListener('error', one, { once: true });
+            })(imgs[k]);
+        }
 
         if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(function () { bump(2); }, function () { bump(2); });
+            document.fonts.ready.then(function () { add(2); }, function () { add(2); });
         } else {
-            bump(2);
+            add(2);
         }
 
-        // 视频按"已缓冲比例"给分，进度是真的。
-        // 关键：视频必须真的能播（canplay / readyState>=3）才算完 ——
-        // 之前是"2.5 秒观察期一到就算加载完"，结果 4MB 壁纸还没就绪就放人进来了。
+        // 视频：缓冲比例只喂进度条
         var v = document.getElementById('bgVideo');
-        var videoGiven = 0;
-        var videoReady = false;
-        function videoPartial(ratio) {
-            var target = Math.round(ratio * 6);
-            if (target > videoGiven) { done += (target - videoGiven); videoGiven = target; report(); }
-            if (done >= total) finish();
-        }
-        function videoSettled() { videoReady = true; videoPartial(1); }
-
         if (v) {
+            var given = 0;
             v.addEventListener('progress', function () {
                 try {
-                    if (v.buffered.length && v.duration) {
-                        videoPartial(v.buffered.end(v.buffered.length - 1) / v.duration);
-                    }
+                    if (!v.buffered.length || !v.duration) return;
+                    var target = Math.round(v.buffered.end(v.buffered.length - 1) / v.duration * 6);
+                    if (target > given) { add(target - given); given = target; }
                 } catch (e) {}
             });
-            if (v.readyState >= 3) videoSettled();
-            v.addEventListener('canplay', videoSettled, { once: true });
-            v.addEventListener('canplaythrough', videoSettled, { once: true });
-            v.addEventListener('loadeddata', function () {
-                // 至少第一帧出来了；canplay 一般紧接着就到
-                videoPartial(0.85);
-            }, { once: true });
-            v.addEventListener('error', videoSettled, { once: true });   // 真加载不了就放行
+            v.addEventListener('error', function () { videoReady = true; }, { once: true });
+            setTimeout(function () { videoReady = true; }, 12000);   // 真出不来也别把人锁住
         } else {
-            videoSettled();      // 省流量 / 减少动态效果时压根没有视频
+            videoReady = true;                                        // 省流量 / 减少动态效果
         }
 
-        // 真正决定什么时候放人进来：等视频就绪（无视频、加载失败、或超时的除外）
-        function releaseWhenVideoReady() {
-            if (finished) return;
-            if (!v || videoReady) { setTimeout(finish, 300); return; }
-            if (v.networkState === 3 /* NO_SOURCE */) { videoSettled(); setTimeout(finish, 300); return; }
+        // 视频脚本画完首帧会调这里；如果它在本段之前就已经画完了，用查询函数补一次
+        window.__videoLive = function () { videoReady = true; };
+        if (typeof window.__videoIsLive === 'function' && window.__videoIsLive()) videoReady = true;
 
-            var t0 = Date.now();
-            var wait = setInterval(function () {
-                if (finished) { clearInterval(wait); return; }
-                // 就绪了立刻放行；实在等太久（8 秒）也别把人锁在外面
-                if (videoReady || Date.now() - t0 > 8000) {
-                    clearInterval(wait);
-                    videoSettled();
-                    finish();
-                }
-            }, 150);
-        }
+        // 立刻开始判定（不要挂在 window.load 上 —— load 本身也在等视频）
+        var wait = setInterval(function () {
+            if (finished) { clearInterval(wait); return; }
+            if (videoReady) {
+                clearInterval(wait);
+                add(total);                    // 进度条走满
+                setTimeout(finish, 250);       // 让壁纸淡入先露个脸
+            }
+        }, 150);
 
-        // 图片/字体都到位（load）之后再等视频；即使 load 来得早，也由上面这段兜住
-        if (document.readyState === 'complete') releaseWhenVideoReady();
-        else window.addEventListener('load', releaseWhenVideoReady);
-        report();
+        draw();
     })();
     </script>
 
