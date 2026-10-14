@@ -395,6 +395,19 @@
             opacity: 1;
         }
 
+        /* 视频卡住（缓冲停顿 / 等待数据）时，别让背景像死了一样：
+           让它慢慢"呼吸"放大一点点；恢复播放就撤掉这个类。
+           网速慢的访客会看到首帧卡住，有这层动画至少不显得是坏的。 */
+        .bg-video.stalled {
+            transform-origin: center center;
+            animation: bgBreath 12s ease-in-out infinite;
+        }
+
+        @keyframes bgBreath {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         /* 视频之上压一层柔光，保证白色内容区的字还看得清 */
         .bg-veil {
             position: fixed;
@@ -2454,6 +2467,19 @@
                 if (p && p.catch) p.catch(function () {});
             }
         });
+
+        // 3.5) 卡住时别让画面像死了一样：等待数据就"呼吸"，恢复播放就撤掉
+        video.addEventListener('waiting', function () { video.classList.add('stalled'); });
+        video.addEventListener('stalled', function () { video.classList.add('stalled'); });
+        video.addEventListener('playing', function () { video.classList.remove('stalled'); });
+        video.addEventListener('canplay', function () { video.classList.remove('stalled'); });
+
+        // 3.6) 自动播放被拒（切标签页回来常见）时持续重试，成功即自然停下
+        setInterval(function () {
+            if (document.hidden || !video.paused || video.ended) return;
+            var p = video.play();
+            if (p && p.catch) p.catch(function () {});
+        }, 3000);
 
         // 4) 有些浏览器会拦自动播放，首次交互时补一下
         function kick() {
