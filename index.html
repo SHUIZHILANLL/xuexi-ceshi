@@ -1124,6 +1124,93 @@
             color: var(--text-light);
         }
 
+        /* =========================================
+           driver.js 新手引导浮层
+           driver.js 1.9 的配色是写死在 .driver-popover 上的，所以这里用
+           ".driver-popover.dsh-tour" 提高优先级来覆盖（不靠 !important）
+           ========================================= */
+        .driver-popover.dsh-tour {
+            color: #f3e9ff;
+            background: rgba(26, 15, 42, 0.97);
+            border: 1px solid rgba(238, 178, 255, 0.32);
+            border-radius: 12px;
+            min-width: 240px;
+            max-width: 300px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .driver-popover.dsh-tour .driver-popover-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #eeb2ff;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-description {
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: rgba(243, 233, 255, 0.88);
+        }
+
+        .driver-popover.dsh-tour .driver-popover-progress-text {
+            font-size: 12px;
+            color: rgba(243, 233, 255, 0.55);
+        }
+
+        .driver-popover.dsh-tour .driver-popover-close-btn {
+            color: rgba(243, 233, 255, 0.5);
+        }
+
+        .driver-popover.dsh-tour .driver-popover-close-btn:hover,
+        .driver-popover.dsh-tour .driver-popover-close-btn:focus {
+            color: #eeb2ff;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-footer-btn {
+            color: #1a1026;
+            background: #eeb2ff;
+            border: 0;
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-footer-btn:hover,
+        .driver-popover.dsh-tour .driver-popover-footer-btn:focus {
+            background: #f5ccff;
+        }
+
+        /* 箭头颜色必须跟浮层底色一致，四个朝向分别设置（沿用 driver.css 的做法） */
+        .driver-popover.dsh-tour .driver-popover-arrow {
+            border: 5px solid rgba(26, 15, 42, 0.97);
+        }
+
+        .driver-popover.dsh-tour .driver-popover-arrow-side-left {
+            border-right-color: transparent;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-arrow-side-right {
+            border-left-color: transparent;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-arrow-side-top {
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            border-right-color: transparent;
+        }
+
+        .driver-popover.dsh-tour .driver-popover-arrow-side-bottom {
+            border-top-color: transparent;
+            border-left-color: transparent;
+            border-right-color: transparent;
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -3431,6 +3518,87 @@
         }, 150);
 
         draw();
+    })();
+    </script>
+
+    <!-- 新手引导（driver.js，MIT）：首次访问自动走一遍，可随时跳过，只出现一次 -->
+    <script>
+    (function () {
+        try {
+            var KEY = 'tourSeen';
+            try { if (localStorage.getItem(KEY)) return; } catch (e) { return; }   // 存不了就不打扰人
+
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            function loadLib(cb) {
+                var css = document.createElement('link');
+                css.rel = 'stylesheet';
+                css.href = 'vendor/driver.css';
+                document.head.appendChild(css);
+                var s = document.createElement('script');
+                s.src = 'vendor/driver.js';
+                s.onload = cb;
+                document.body.appendChild(s);
+            }
+
+            function buildSteps() {
+                var steps = [];
+                var add = function (sel, title, desc, side, align) {
+                    if (!document.querySelector(sel)) return;      // 找不到就不加这一步
+                    steps.push({ element: sel, popover: { title: title, description: desc, side: side, align: align } });
+                };
+                add('#siteNav', '站内导航', '右上角这几项可以直接跳到各个板块，往下滚它还会跟着高亮当前板块。', 'bottom', 'end');
+                add('#wpAudioShow', '音乐', '站内 23 首曲子收在这个 ♪ 里 —— 点开才有播放器，可以边听边逛。', 'top', 'end');
+                add('#siteSearch', '站内搜索', '搜标题和正文，点结果直接跳过去（键盘 Ctrl / Cmd + K 也能唤出）。', 'bottom', 'end');
+                add('#themeToggle', '深色 / 浅色', '这里换主题，会记住你的选择；没手动选过就跟随系统。', 'bottom', 'end');
+                add('#live2d', '看板娘', '左下角这位会跟着鼠标说话，戳她一下试试。', 'top', 'start');
+                return steps;
+            }
+
+            function start() {
+                if (!window.driver || !window.driver.js) return;
+                var steps = buildSteps();
+                if (!steps.length) return;
+                var tour = window.driver.js.driver({
+                    showProgress: true,
+                    progressText: '{{current}} / {{total}}',
+                    nextBtnText: '下一步',
+                    prevBtnText: '上一步',
+                    doneBtnText: '开始逛',
+                    allowClose: true,
+                    animate: !reduce,
+                    overlayColor: 'rgba(10, 5, 18, 0.72)',
+                    stagePadding: 6,
+                    stageRadius: 10,
+                    popoverClass: 'dsh-tour',
+                    onDestroyed: function () { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+                });
+                tour.setSteps(steps);
+                tour.drive();
+                window.startTour = function () { tour.drive(); };      // 想再看一遍：控制台输入 startTour()
+            }
+
+            // 等某个元素出现（超时就照常继续，缺的那步自动跳过）
+            function waitFor(sel, timeout, cb) {
+                var t0 = Date.now();
+                (function tick() {
+                    if (document.querySelector(sel) || Date.now() - t0 > timeout) { cb(); return; }
+                    setTimeout(tick, 200);
+                })();
+            }
+
+            // 等开屏加载层撤掉再开始（否则引导会盖在加载层上）
+            function begin(tries) {
+                if (document.getElementById('preloader') && (tries || 0) < 60) {
+                    setTimeout(function () { begin((tries || 0) + 1); }, 300);
+                    return;
+                }
+                loadLib(function () { waitFor('#live2d', 6000, function () { setTimeout(start, 250); }); });
+            }
+
+            if (document.readyState === 'complete') setTimeout(function () { begin(0); }, 600);
+            else window.addEventListener('load', function () { setTimeout(function () { begin(0); }, 600); });
+        } catch (e) { /* 引导出错不影响页面 */ }
     })();
     </script>
 
