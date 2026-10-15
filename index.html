@@ -1841,6 +1841,31 @@
             color: var(--loader-fg);
             opacity: 0.75;
         }
+        /* =========================================
+           手机端性能开关
+           backdrop-filter 是手机上最伤帧率的东西：每块模糊都要单独合成，
+           而"跟着页面滚动"和"固定在视口"的那几块，每帧都得重算。
+           这里只关掉最大、最频繁的几处，小面板（音乐 / 搜索 / 留言 / 引导气泡）保留。
+           ========================================= */
+        @media (max-width: 820px), (pointer: coarse) {
+            .container {
+                background: var(--glass-strong);   /* 没有模糊了，把底色压实保证可读 */
+                -webkit-backdrop-filter: none;
+                backdrop-filter: none;
+            }
+
+            .site-nav {
+                background: rgba(24, 14, 38, 0.92);
+                -webkit-backdrop-filter: none;
+                backdrop-filter: none;
+            }
+
+            .credit-item {
+                -webkit-backdrop-filter: none;
+                backdrop-filter: none;
+            }
+        }
+
     </style>
     <script>
     /* 两件必须在 body 渲染前决定的事：
@@ -1936,7 +1961,7 @@
     <!-- 动态背景：整页循环播放的壁纸视频。
          poster 用的是 184 字节的模糊占位图（由视频第一帧生成），
          视频真正画出第一帧后由 JS 加 .live 淡入，实现"模糊 → 动态"的过渡 -->
-    <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="auto"
+    <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="none"
            poster="bg-blur.webp" aria-hidden="true" tabindex="-1">
         <source src="bg-video.mp4" type="video/mp4">
     </video>
@@ -2756,6 +2781,16 @@
         var video = document.getElementById('bgVideo');
         if (!video) return;
 
+        // 挑源：手机/触屏用 960x540 那版（体积小一半、解码像素少 4 倍，掉帧和发热都会好很多）
+        // HTML 里写了 preload="none"，所以这里换完源再 load()，不会白下桌面版那 1.2MB。
+        var lightVid = window.matchMedia && window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+        if (lightVid) {
+            video.setAttribute('src', 'bg-video-m.mp4');
+            video.load();
+        } else {
+            video.load();      // 桌面端也要主动触发一次（preload=none 不会自己下）
+        }
+
         // 0) "动态背景真的出来了"的判定：以第一帧被真正呈现为准。
         //    requestVideoFrameCallback 是唯一能确认"这一帧已经画到屏幕上"的 API；
         //    退一步用 playing + 一点延迟，再退一步才靠超时。
@@ -2861,8 +2896,13 @@
         var analyser = null, freq = null, audioCtx = null;
         var boost = 1;                        // 窄屏线条要更粗更亮，缩在手机上才看得出来
 
+        // 手机端性能档：DPR 压到 1（像素少 4 倍）、帧率降到约 30fps
+        var LIGHT = window.matchMedia && window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+        var frameSkip = 0;
+
         function resize() {
-            var dpr = Math.min(window.devicePixelRatio || 1, 2);
+            var cap = LIGHT ? 1 : 2;
+            var dpr = Math.min(window.devicePixelRatio || 1, cap);
             W = canvas.clientWidth || 1;
             H = canvas.clientHeight || 1;
             canvas.width = Math.max(1, Math.round(W * dpr));
@@ -2929,6 +2969,10 @@
         }
 
         function loop(t) {
+            if (LIGHT && (frameSkip = (frameSkip + 1) % 2)) {   // 手机端隔帧画 = 约 30fps
+                requestAnimationFrame(loop);
+                return;
+            }
             collect(t);
             ribbon();
             requestAnimationFrame(loop);
@@ -3334,11 +3378,14 @@
 
         var ctx = canvas.getContext('2d');
         var W = 0, H = 0, dpr = 1, rafId = null;
-        var COUNT = 18;
+        // 手机端降档：DPR 压到 1（像素少 4 倍）、花瓣减半、帧率约 30fps
+        var LIGHT = window.matchMedia && window.matchMedia('(max-width: 820px), (pointer: coarse)').matches;
+        var COUNT = LIGHT ? 8 : 18;
+        var skip = 0;
         var petals = [];
 
         function resize() {
-            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            dpr = Math.min(window.devicePixelRatio || 1, LIGHT ? 1 : 2);
             W = window.innerWidth;
             H = window.innerHeight;
             canvas.width = Math.round(W * dpr);
@@ -3368,6 +3415,12 @@
 
         var last = 0;
         function frame(now) {
+            // 手机端隔帧画 ≈ 30fps；跳过的帧也更新时间基准，免得下次 dt 过大
+            if (LIGHT && (skip = (skip + 1) % 2)) {
+                last = now;
+                rafId = requestAnimationFrame(frame);
+                return;
+            }
             var dt = Math.min(40, now - last);          // 切回标签时 dt 会很大，夹住防止花瓣瞬移
             last = now;
             ctx.clearRect(0, 0, W, H);
