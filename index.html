@@ -1240,11 +1240,12 @@
             right: 0;
             bottom: 0;
             left: 0;
+            /* 只做轻微压暗，让人看得清画面；
+               原图那行英文交给下面 .ru-quote 的磨砂玻璃去糊掉 */
             background: linear-gradient(180deg,
-                rgba(8, 5, 14, 0.30) 0%,
-                rgba(8, 5, 14, 0.66) 20%,
-                rgba(8, 5, 14, 0.66) 62%,
-                rgba(8, 5, 14, 0.30) 100%);
+                rgba(8, 5, 14, 0.42) 0%,
+                rgba(8, 5, 14, 0.34) 45%,
+                rgba(8, 5, 14, 0.44) 100%);
             z-index: 1;
         }
 
@@ -1253,7 +1254,8 @@
             z-index: 2;
         }
 
-        /* 俄语大字：垂直居中、厚重、白字加阴影 */
+        /* 俄语大字：垂直居中、厚重、白字加阴影，坐在一块磨砂玻璃板上
+           （backdrop-filter 会把身后的原图英文糊掉，所以不会两句打架） */
         .post-card-ru {
             display: flex;
             flex-direction: column;
@@ -1268,13 +1270,21 @@
 
         .ru-quote {
             margin: 10px auto 0;
-            max-width: 32ch;
+            max-width: 36ch;
+            /* 上边留得厚一些：原图那行英文比俄语高一点，
+               板子要盖过它，否则会从上面露出来一条 */
+            padding: 54px 28px 30px;
             font-size: clamp(1.1rem, 2.7vw, 1.95rem);
             font-weight: 700;
             line-height: 1.55;
             letter-spacing: 0.01em;
             color: #fff;
             text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 2px rgba(0, 0, 0, 0.9);
+            background: rgba(10, 6, 18, 0.40);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            -webkit-backdrop-filter: blur(10px) saturate(1.15);
+            backdrop-filter: blur(10px) saturate(1.15);
         }
 
         /* Career */
