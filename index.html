@@ -1247,6 +1247,12 @@
                 rgba(8, 5, 14, 0.34) 45%,
                 rgba(8, 5, 14, 0.44) 100%);
             z-index: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        /* 鼠标停在这张卡片上：压暗层先变亮一点 */
+        .post-card-bg6:hover::after {
+            opacity: 0.42;
         }
 
         .post-card-bg6 > * {
@@ -1266,6 +1272,18 @@
 
         .post-card-ru .post-date {
             color: rgba(255, 255, 255, 0.72);
+        }
+
+        /* 鼠标停在这张卡片上：日期 + 磨砂板 + 俄语大字一起淡出，露出后面的原图。
+           用 opacity 而不是 display —— 元素盒子不变，鼠标不会"一碰就抖"。 */
+        .post-card-ru .post-date,
+        .ru-quote {
+            transition: opacity 0.4s ease;
+        }
+
+        .post-card-ru:hover .post-date,
+        .post-card-ru:hover .ru-quote {
+            opacity: 0;
         }
 
         .ru-quote {
