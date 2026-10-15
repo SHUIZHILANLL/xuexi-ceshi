@@ -1214,6 +1214,69 @@
             border-right-color: transparent;
         }
 
+        /* =========================================
+           俄语那句（10 月 15 日那张）
+           背景图里原本烧着英文原文，所以这里用"中间一条暗带"把它压住，
+           再把俄语大字放上去；上下两端留亮，画面还是看得清。
+           模糊度按要求给得很低（0.6px，其它卡片是 2~3px）。
+           ========================================= */
+        .post-card-bg6::before {
+            content: "";
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            bottom: -20px;
+            left: -20px;
+            background: url('bg6.webp') no-repeat center center;
+            background-size: cover;
+            filter: blur(0.6px);
+            z-index: 0;
+        }
+
+        .post-card-bg6::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(180deg,
+                rgba(8, 5, 14, 0.30) 0%,
+                rgba(8, 5, 14, 0.66) 20%,
+                rgba(8, 5, 14, 0.66) 62%,
+                rgba(8, 5, 14, 0.30) 100%);
+            z-index: 1;
+        }
+
+        .post-card-bg6 > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 俄语大字：垂直居中、厚重、白字加阴影 */
+        .post-card-ru {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 380px;
+            text-align: center;
+        }
+
+        .post-card-ru .post-date {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .ru-quote {
+            margin: 10px auto 0;
+            max-width: 32ch;
+            font-size: clamp(1.1rem, 2.7vw, 1.95rem);
+            font-weight: 700;
+            line-height: 1.55;
+            letter-spacing: 0.01em;
+            color: #fff;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 2px rgba(0, 0, 0, 0.9);
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -1976,6 +2039,10 @@
         <!-- Blog Posts Section -->
         <section class="section" id="feed">
             <h2 class="section-title">最新动向 干了什么我🤖</h2>
+            <article class="post-card post-card-bg6 post-card-ru">
+                <p class="post-date">2026 年 10 月 15 日</p>
+                <p class="ru-quote">«Возьми немного семян и положи их в карман — чтобы после твоей смерти они проросли и расцвели здесь.»</p>
+            </article>
             <article class="post-card post-card-bg5 post-card-reading">
                 <p class="post-date">2026 年 10 月 1 日</p>
                 <h3 class="post-title">喜报，qq聊天机器人成功部署云端</h3>
