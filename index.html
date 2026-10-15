@@ -1272,6 +1272,48 @@
             text-shadow: 0 1px 10px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
         }
 
+        /* 悬停时在最底下浮出中文小字（做成一枚深色小胶囊，压在向日葵田上也读得清） */
+        .post-card-ru .ru-cn {
+            position: absolute;
+            left: 50%;
+            bottom: 14px;
+            z-index: 2;
+            transform: translateX(-50%);
+            margin: 0;
+            padding: 5px 14px;
+            font-size: 0.76rem;
+            line-height: 1.5;
+            white-space: nowrap;
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(10, 6, 18, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;          /* 别挡住鼠标，免得自己把 hover 抖掉 */
+        }
+
+        .post-card-ru:hover .ru-cn {
+            opacity: 1;
+        }
+
+        /* 触屏设备没有 hover，直接常驻显示 */
+        @media (hover: none) {
+            .post-card-ru .ru-cn {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .post-card-ru .ru-cn {
+                max-width: calc(100% - 24px);
+                font-size: 0.72rem;
+                white-space: normal;
+            }
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -2036,6 +2078,7 @@
             <h2 class="section-title">最新动向 干了什么我🤖</h2>
             <article class="post-card post-card-bg6 post-card-ru">
                 <p class="post-date">2026 年 10 月 15 日</p>
+                <p class="ru-cn">拿上些种子放进你的口袋吧，这样它们就会在你死后在这里生长开花</p>
             </article>
             <article class="post-card post-card-bg5 post-card-reading">
                 <p class="post-date">2026 年 10 月 1 日</p>
