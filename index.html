@@ -1272,6 +1272,7 @@
 
         .post-card-ru .post-date {
             color: rgba(255, 255, 255, 0.72);
+            text-align: left;              /* 和其它卡片一样靠左，不跟着卡片居中 */
         }
 
         /* 鼠标停在这张卡片上：日期 + 磨砂板 + 俄语大字一起淡出，露出后面的原图。
@@ -1288,25 +1289,24 @@
 
         .ru-quote {
             margin: 10px auto 0;
-            width: fit-content;
-            max-width: 100%;
-            /* 字号小、排成一行：跟视口联动，桌面端正好一行放得下。
-               第一行是给不支持 clamp 的老浏览器兜底的。 */
-            font-size: 0.9rem;
-            font-size: clamp(0.68rem, 1.36vw, 0.86rem);
-            white-space: nowrap;
+            /* 给个固定宽度：一是不让两行文字把板子撑得忽宽忽窄，
+               二是板子必须够宽才盖得住原图那行英文 */
+            width: min(640px, 100%);
+            /* 两行、字号比之前略提一点（第一行给老浏览器兜底） */
+            font-size: 0.92rem;
+            font-size: clamp(0.78rem, 1.15vw, 1rem);
             font-weight: 700;
-            line-height: 1.5;
+            line-height: 1.6;
             letter-spacing: 0.01em;
             color: #fff;
             text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 2px rgba(0, 0, 0, 0.9);
-            /* 板子本身仍要够高 —— 原图里那行英文比这句俄语高，
-               板子矮了就会从上下露出几条来 */
+            /* 板子本身仍要够高够宽 —— 原图里那行英文比这句俄语大，
+               板子小了就会从边上露出几条来 */
             min-height: 152px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 30px;
+            padding: 0 22px;
             background: rgba(10, 6, 18, 0.40);
             border: 1px solid rgba(255, 255, 255, 0.14);
             border-radius: 14px;
@@ -1314,12 +1314,12 @@
             backdrop-filter: blur(10px) saturate(1.15);
         }
 
-        /* 窄屏一行肯定放不下，就允许折行，别硬挤成蚂蚁字 */
+        /* 窄屏：板子占满，字号再收一点 */
         @media (max-width: 640px) {
             .ru-quote {
-                white-space: normal;
-                font-size: 0.86rem;
-                padding: 0 16px;
+                font-size: 0.82rem;
+                padding: 16px 14px;
+                min-height: 0;
             }
         }
 
@@ -2087,7 +2087,7 @@
             <h2 class="section-title">最新动向 干了什么我🤖</h2>
             <article class="post-card post-card-bg6 post-card-ru">
                 <p class="post-date">2026 年 10 月 15 日</p>
-                <p class="ru-quote">Возьми немного семян и положи их в карман — чтобы после твоей смерти они проросли и расцвели здесь.</p>
+                <p class="ru-quote">Возьми немного семян и положи их в карман —<br>чтобы после твоей смерти они проросли и расцвели здесь.</p>
             </article>
             <article class="post-card post-card-bg5 post-card-reading">
                 <p class="post-date">2026 年 10 月 1 日</p>
