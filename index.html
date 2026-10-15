@@ -1229,6 +1229,10 @@
             left: -20px;
             background: url('bg6.webp') no-repeat center center;
             background-size: cover;
+            /* 原图里那行英文的中心大约在图片宽度的 58% 处。
+               桌面端卡片够宽、图片横向不裁切，这个值不起作用；
+               手机端卡片变窄、cover 会横向裁切，靠它把英文留在正中。 */
+            background-position: 58% center;
             filter: blur(0.6px);
             z-index: 0;
         }
