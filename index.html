@@ -1240,16 +1240,18 @@
             right: 0;
             bottom: 0;
             left: 0;
-            /* 只做一层轻微压暗：既是让日期看得清，也别把画面糊住 */
+            /* 只做一层轻微压暗：既是让日期看得清，也别把画面糊住。
+               颜色用全站那套紫调深色（rgba(24,14,38)），而不是中性近黑，
+               这样它和播放器、加载层、深色玻璃是同一族的颜色。 */
             background: linear-gradient(180deg,
-                rgba(8, 5, 14, 0.46) 0%,
-                rgba(8, 5, 14, 0.34) 45%,
-                rgba(8, 5, 14, 0.44) 100%);
+                rgba(24, 14, 38, 0.48) 0%,
+                rgba(24, 14, 38, 0.34) 45%,
+                rgba(24, 14, 38, 0.46) 100%);
             z-index: 1;
             transition: opacity 0.4s ease;
         }
 
-        /* 鼠标停在这张卡片上：压暗层先变亮一点 */
+        /* 鼠标停在这张卡片上：压暗层先变亮一点（普通卡片没有这层，是想让人看清照片） */
         .post-card-bg6:hover::after {
             opacity: 0.42;
         }
@@ -1259,17 +1261,18 @@
             z-index: 2;
         }
 
-        /* 俄语大字：垂直居中、厚重、白字加阴影，坐在一块磨砂玻璃板上
-           （backdrop-filter 会把身后的原图英文糊掉，所以不会两句打架） */
-        /* 这张只放照片 + 日期：日期和其它卡片一样在左上角常驻 */
+        /* 这张只放照片 + 日期：日期和其它卡片一样在左上角常驻。
+           字号、下边距都沿用 .post-date 的基础样式（与其它卡片一致），
+           这里只改颜色 —— 因为压在照片上，得用深色模式那套浅色字。 */
         .post-card-ru {
             min-height: 360px;
         }
 
         .post-card-ru .post-date {
-            color: rgba(255, 255, 255, 0.82);
+            color: #f4edff;                /* 和深色主题的正文色一致，只是更透一点 */
+            color: rgba(244, 237, 255, 0.85);
             text-align: left;
-            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
+            text-shadow: 0 1px 10px rgba(24, 14, 38, 0.9), 0 0 2px rgba(24, 14, 38, 0.95);
         }
 
         /* 悬停时在最底下浮出中文小字（做成一枚深色小胶囊，压在向日葵田上也读得清） */
@@ -1284,9 +1287,9 @@
             font-size: 0.76rem;
             line-height: 1.5;
             white-space: nowrap;
-            color: rgba(255, 255, 255, 0.92);
-            background: rgba(10, 6, 18, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(244, 237, 255, 0.94);          /* 同深色主题正文色 */
+            background: rgba(24, 14, 38, 0.62);        /* 同全站紫调深色（播放器 / 加载层那一族） */
+            border: 1px solid rgba(238, 178, 255, 0.24); /* 同主题的紫粉描边 --glass-edge */
             border-radius: 999px;
             -webkit-backdrop-filter: blur(6px);
             backdrop-filter: blur(6px);
