@@ -207,9 +207,10 @@
             background: #eeb2ff;
         }
 
-        /* 主题切换 / 搜索 两个小圆钮 */
+        /* 主题切换 / 搜索 / 新手引导 三个小圆钮 */
         .site-nav .nav-theme,
-        .site-nav .nav-search {
+        .site-nav .nav-search,
+        .site-nav .nav-help {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -229,7 +230,8 @@
 
         .site-nav .nav-theme:hover,
         .site-nav .nav-search:hover,
-        .site-nav .nav-search.active {
+        .site-nav .nav-search.active,
+        .site-nav .nav-help:hover {
             background: rgba(238, 178, 255, 0.22);
         }
 
@@ -365,7 +367,8 @@
                 font-size: .76rem;
             }
 
-            .site-nav .nav-theme {
+            .site-nav .nav-theme,
+            .site-nav .nav-help {
                 width: 26px;
                 height: 26px;
                 font-size: .8rem;
@@ -1890,6 +1893,7 @@
         <a href="#comments" data-nav="comments">留言</a>
         <button type="button" id="siteSearch" class="nav-search" aria-label="站内搜索" title="站内搜索（Ctrl+K）">🔍</button>
         <button type="button" id="themeToggle" class="nav-theme" aria-label="切换深色 / 浅色主题" title="切换深色 / 浅色主题">🌙</button>
+        <button type="button" id="tourBtn" class="nav-help" aria-label="再看一遍新手引导" title="再看一遍新手引导">❓</button>
     </nav>
 
     <!-- 站内搜索面板 -->
@@ -3444,6 +3448,15 @@
         var total = 1;
         var finished = false;
         var videoReady = false;
+        var live2dReady = false;      // 看板娘是否已经出来（放行的第二个条件）
+
+        // 等看板娘出现：它是页面 load 之后才加载的。最多等 6 秒，
+        // 等不到（比如被网络挡了）也照常放行，不能把人锁在加载页。
+        (function watchLive2d(tries) {
+            if (document.getElementById('live2d')) { live2dReady = true; return; }
+            if ((tries || 0) > 30) { live2dReady = true; return; }
+            setTimeout(function () { watchLive2d((tries || 0) + 1); }, 200);
+        })(0);
 
         function draw() {
             var p = Math.max(0, Math.min(100, Math.round(done / total * 100)));
@@ -3459,8 +3472,13 @@
             if (window.__preloaderKill) clearTimeout(window.__preloaderKill);
             if (bar) bar.style.width = '100%';
             if (pct) pct.textContent = '100%';
-            el.className = 'preloader done';
-            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 700);
+
+            // 顺序：先让新手引导浮层出来，再让加载层淡出（约 250ms 之后）
+            try { document.dispatchEvent(new Event('preloader:done')); } catch (e) {}
+            setTimeout(function () {
+                el.className = 'preloader done';
+                setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 700);
+            }, 250);
         }
 
         // 权重：字体 2、每张图 1、视频 6（进度条用；不决定何时放行）
@@ -3508,9 +3526,10 @@
         if (typeof window.__videoIsLive === 'function' && window.__videoIsLive()) videoReady = true;
 
         // 立刻开始判定（不要挂在 window.load 上 —— load 本身也在等视频）
+        // 放行条件：动态背景出来了 **并且** 看板娘也出来了
         var wait = setInterval(function () {
             if (finished) { clearInterval(wait); return; }
-            if (videoReady) {
+            if (videoReady && live2dReady) {
                 clearInterval(wait);
                 add(total);                    // 进度条走满
                 setTimeout(finish, 1000);      // 等 .bg-video 那 0.9s 淡入走完，让人真看到壁纸在动
@@ -3526,7 +3545,8 @@
     (function () {
         try {
             var KEY = 'tourSeen';
-            try { if (localStorage.getItem(KEY)) return; } catch (e) { return; }   // 存不了就不打扰人
+            var seen = false;
+            try { seen = !!localStorage.getItem(KEY); } catch (e) { seen = true; }   // 存不了就不自动打扰人
 
             var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -3555,49 +3575,67 @@
                 return steps;
             }
 
-            function start() {
-                if (!window.driver || !window.driver.js) return;
-                var steps = buildSteps();
-                if (!steps.length) return;
-                var tour = window.driver.js.driver({
-                    showProgress: true,
-                    progressText: '{{current}} / {{total}}',
-                    nextBtnText: '下一步',
-                    prevBtnText: '上一步',
-                    doneBtnText: '开始逛',
-                    allowClose: true,
-                    animate: !reduce,
-                    overlayColor: 'rgba(10, 5, 18, 0.72)',
-                    stagePadding: 6,
-                    stageRadius: 10,
-                    popoverClass: 'dsh-tour',
-                    onDestroyed: function () { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+            var tour = null;
+
+            function ensureTour(cb) {
+                if (tour) { cb(); return; }
+                loadLib(function () {
+                    if (!window.driver || !window.driver.js) return;
+                    var steps = buildSteps();
+                    if (!steps.length) return;
+                    tour = window.driver.js.driver({
+                        showProgress: true,
+                        progressText: '{{current}} / {{total}}',
+                        nextBtnText: '下一步',
+                        prevBtnText: '上一步',
+                        doneBtnText: '开始逛',
+                        allowClose: true,
+                        animate: !reduce,
+                        overlayColor: 'rgba(10, 5, 18, 0.72)',
+                        stagePadding: 6,
+                        stageRadius: 10,
+                        popoverClass: 'dsh-tour',
+                        onDestroyed: function () { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+                    });
+                    tour.setSteps(steps);
+                    cb();
                 });
-                tour.setSteps(steps);
-                tour.drive();
-                window.startTour = function () { tour.drive(); };      // 想再看一遍：控制台输入 startTour()
             }
 
-            // 等某个元素出现（超时就照常继续，缺的那步自动跳过）
-            function waitFor(sel, timeout, cb) {
-                var t0 = Date.now();
-                (function tick() {
-                    if (document.querySelector(sel) || Date.now() - t0 > timeout) { cb(); return; }
-                    setTimeout(tick, 200);
-                })();
+            // ===== 常驻入口：导航上的 ❓ 按钮 / 控制台 startTour() =====
+            window.startTour = function () {
+                ensureTour(function () { if (tour) tour.drive(); });
+            };
+            var helpBtn = document.getElementById('tourBtn');
+            if (helpBtn) {
+                helpBtn.addEventListener('click', function () { window.startTour(); });
             }
 
-            // 等开屏加载层撤掉再开始（否则引导会盖在加载层上）
-            function begin(tries) {
-                if (document.getElementById('preloader') && (tries || 0) < 60) {
-                    setTimeout(function () { begin((tries || 0) + 1); }, 300);
-                    return;
-                }
-                loadLib(function () { waitFor('#live2d', 6000, function () { setTimeout(start, 250); }); });
+            // ===== 首次访问自动走一遍 =====
+            // 时机由加载层控制：它在淡出之前会派发 preloader:done，
+            // 于是顺序是「看板娘出来 -> 引导浮层出来 -> 加载动画结束」
+            if (seen) return;
+
+            var fired = false;
+            function autoStart() {
+                if (fired) return;
+                fired = true;
+                ensureTour(function () {
+                    if (!tour) return;
+                    try { localStorage.setItem(KEY, '1'); } catch (e) {}   // 一开始就记下，刷新不重复
+                    tour.drive();
+                });
             }
 
-            if (document.readyState === 'complete') setTimeout(function () { begin(0); }, 600);
-            else window.addEventListener('load', function () { setTimeout(function () { begin(0); }, 600); });
+            document.addEventListener('preloader:done', function () { setTimeout(autoStart, 120); });
+            // 兜底：万一加载层没跑起来（比如开了"减少动态效果"），load 之后自己兜一次
+            function fallback() {
+                if (fired) return;
+                if (document.getElementById('preloader')) return;
+                autoStart();
+            }
+            if (document.readyState === 'complete') setTimeout(fallback, 2500);
+            else window.addEventListener('load', function () { setTimeout(fallback, 2500); });
         } catch (e) { /* 引导出错不影响页面 */ }
     })();
     </script>
