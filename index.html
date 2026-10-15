@@ -1240,10 +1240,9 @@
             right: 0;
             bottom: 0;
             left: 0;
-            /* 只做轻微压暗，让人看得清画面；
-               原图那行英文交给下面 .ru-quote 的磨砂玻璃去糊掉 */
+            /* 只做一层轻微压暗：既是让日期看得清，也别把画面糊住 */
             background: linear-gradient(180deg,
-                rgba(8, 5, 14, 0.42) 0%,
+                rgba(8, 5, 14, 0.46) 0%,
                 rgba(8, 5, 14, 0.34) 45%,
                 rgba(8, 5, 14, 0.44) 100%);
             z-index: 1;
@@ -1262,65 +1261,15 @@
 
         /* 俄语大字：垂直居中、厚重、白字加阴影，坐在一块磨砂玻璃板上
            （backdrop-filter 会把身后的原图英文糊掉，所以不会两句打架） */
+        /* 这张只放照片 + 日期：日期和其它卡片一样在左上角常驻 */
         .post-card-ru {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 380px;
-            text-align: center;
+            min-height: 360px;
         }
 
         .post-card-ru .post-date {
-            color: rgba(255, 255, 255, 0.72);
-            text-align: left;              /* 和其它卡片一样靠左，不跟着卡片居中 */
-        }
-
-        /* 鼠标停在这张卡片上：日期 + 磨砂板 + 俄语大字一起淡出，露出后面的原图。
-           用 opacity 而不是 display —— 元素盒子不变，鼠标不会"一碰就抖"。 */
-        .post-card-ru .post-date,
-        .ru-quote {
-            transition: opacity 0.4s ease;
-        }
-
-        .post-card-ru:hover .post-date,
-        .post-card-ru:hover .ru-quote {
-            opacity: 0;
-        }
-
-        .ru-quote {
-            margin: 10px auto 0;
-            /* 给个固定宽度：一是不让两行文字把板子撑得忽宽忽窄，
-               二是板子必须够宽才盖得住原图那行英文 */
-            width: min(640px, 100%);
-            /* 两行、字号比之前略提一点（第一行给老浏览器兜底） */
-            font-size: 0.92rem;
-            font-size: clamp(0.78rem, 1.15vw, 1rem);
-            font-weight: 700;
-            line-height: 1.6;
-            letter-spacing: 0.01em;
-            color: #fff;
-            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 2px rgba(0, 0, 0, 0.9);
-            /* 板子本身仍要够高够宽 —— 原图里那行英文比这句俄语大，
-               板子小了就会从边上露出几条来 */
-            min-height: 152px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 22px;
-            background: rgba(10, 6, 18, 0.40);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 14px;
-            -webkit-backdrop-filter: blur(10px) saturate(1.15);
-            backdrop-filter: blur(10px) saturate(1.15);
-        }
-
-        /* 窄屏：板子占满，字号再收一点 */
-        @media (max-width: 640px) {
-            .ru-quote {
-                font-size: 0.82rem;
-                padding: 16px 14px;
-                min-height: 0;
-            }
+            color: rgba(255, 255, 255, 0.82);
+            text-align: left;
+            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.85), 0 0 2px rgba(0, 0, 0, 0.9);
         }
 
         /* Career */
@@ -2087,7 +2036,6 @@
             <h2 class="section-title">最新动向 干了什么我🤖</h2>
             <article class="post-card post-card-bg6 post-card-ru">
                 <p class="post-date">2026 年 10 月 15 日</p>
-                <p class="ru-quote">Возьми немного семян и положи их в карман —<br>чтобы после твоей смерти они проросли и расцвели здесь.</p>
             </article>
             <article class="post-card post-card-bg5 post-card-reading">
                 <p class="post-date">2026 年 10 月 1 日</p>
