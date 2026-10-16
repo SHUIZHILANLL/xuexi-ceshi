@@ -1321,6 +1321,157 @@
             }
         }
 
+        /* =========================================
+           目前进行时（个人 VPN 技术实践）
+           流程画成"三个节点 + 箭头"，箭头上的字就是数据流说明；
+           窄屏自动竖排（箭头转 90 度）。
+           ========================================= */
+        .now-lead {
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 18px 14px;
+            background: var(--glass);
+            border: 1px solid var(--glass-edge);
+            border-radius: 14px;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .flow-node {
+            flex: 0 0 auto;
+            min-width: 146px;
+            padding: 12px 14px;
+            text-align: center;
+            background: var(--plate);
+            border: 1px solid var(--glass-edge);
+            border-radius: 12px;
+        }
+
+        .flow-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .flow-sub {
+            margin-top: 4px;
+            font-size: 0.74rem;
+            letter-spacing: 0.02em;
+            color: var(--primary);
+        }
+
+        .flow-arrow {
+            position: relative;
+            flex: 1 1 60px;
+            min-width: 54px;
+            max-width: 120px;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, rgba(238, 178, 255, 0.35), rgba(238, 178, 255, 0.85));
+        }
+
+        .flow-arrow::after {
+            content: "";
+            position: absolute;
+            right: -1px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right: 0;
+            border-left-color: rgba(238, 178, 255, 0.9);
+        }
+
+        .flow-arrow span {
+            position: absolute;
+            left: 50%;
+            bottom: 8px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .now-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .now-step {
+            flex: 1 1 200px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--text-light);
+            background: var(--glass);
+            border: 1px solid var(--glass-edge);
+            border-radius: 10px;
+        }
+
+        .now-step strong {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.82rem;
+            color: var(--text);
+        }
+
+        .now-step.on {
+            background: var(--chip);
+            border-color: rgba(238, 178, 255, 0.5);
+        }
+
+        .now-step.on strong {
+            color: var(--primary);
+        }
+
+        @media (max-width: 700px) {
+            .flow {
+                flex-direction: column;
+            }
+
+            .flow-node {
+                width: 100%;
+            }
+
+            .flow-arrow {
+                flex: 0 0 auto;
+                width: 2px;
+                height: 34px;
+                min-width: 0;
+                max-width: none;
+                background: linear-gradient(180deg, rgba(238, 178, 255, 0.35), rgba(238, 178, 255, 0.85));
+            }
+
+            .flow-arrow::after {
+                right: auto;
+                bottom: -1px;
+                top: auto;
+                left: 50%;
+                transform: translateX(-50%);
+                border: 5px solid transparent;
+                border-bottom: 0;
+                border-top-color: rgba(238, 178, 255, 0.9);
+            }
+
+            .flow-arrow span {
+                left: auto;
+                right: 10px;
+                bottom: 50%;
+                transform: translateY(50%);
+            }
+        }
+
         /* Career */
         .career-item {
             display: flex;
@@ -2019,6 +2170,7 @@
     <nav class="site-nav" id="siteNav" aria-label="站内导航">
         <a href="#about" data-nav="about">关于我</a>
         <a href="#works" data-nav="works">我的成就</a>
+        <a href="#now" data-nav="now">进行时</a>
         <a href="#feed" data-nav="feed">最新动向</a>
         <a href="#contact" data-nav="contact">联系我</a>
         <a href="#credits" data-nav="credits">开源</a>
@@ -2101,6 +2253,40 @@
                     <h3>2019年地球卫士联合获奖人🤭</h3>
                     <h4>什么？你说这些每个人都有？</h4>
                     <p><s>别骂了，我是废物😭😭😭</s></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 目前进行时 -->
+        <section class="section" id="now">
+            <h2 class="section-title">目前进行时.......</h2>
+            <p class="now-lead">借助 3X-UI、Hiddify 等搭建个人 VPN 的技术实践。</p>
+
+            <div class="flow">
+                <div class="flow-node">
+                    <div class="flow-name">客户端代理软件</div>
+                    <div class="flow-sub">v2rayN / Clash</div>
+                </div>
+                <div class="flow-arrow"><span>加密流量</span></div>
+                <div class="flow-node">
+                    <div class="flow-name">VPS 服务端</div>
+                    <div class="flow-sub">Xray / Hysteria2</div>
+                </div>
+                <div class="flow-arrow"></div>
+                <div class="flow-node">
+                    <div class="flow-name">目标网站</div>
+                    <div class="flow-sub">明文 HTTP / HTTPS</div>
+                </div>
+            </div>
+
+            <div class="now-status">
+                <div class="now-step on">
+                    <strong>正在进行</strong>
+                    申请微软 Azure for Students 认证中 —— 学校还没发教育邮箱，卡在这一步。
+                </div>
+                <div class="now-step">
+                    <strong>还差一台服务器</strong>
+                    手上没有可用的 VPS，服务端暂时部署不起来 😿
                 </div>
             </div>
         </section>
