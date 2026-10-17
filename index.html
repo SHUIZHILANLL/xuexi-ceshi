@@ -3701,7 +3701,7 @@
     (function () {
         function boot() {
             var s = document.createElement('script');
-            s.src = 'https://shuizhilanll.github.io/xuexi-ceshi/live2d-widget/dist/autoload.js';
+            s.src = 'live2d-widget/dist/autoload.js';
             s.async = true;
             document.body.appendChild(s);
         }
@@ -3961,7 +3961,7 @@
         // 等不到（比如被网络挡了）也照常放行，不能把人锁在加载页。
         (function watchLive2d(tries) {
             if (document.getElementById('live2d')) { live2dReady = true; return; }
-            if ((tries || 0) > 30) { live2dReady = true; return; }
+            if ((tries || 0) > 60) { live2dReady = true; return; }   // 最多等 12 秒，等不到再放行
             setTimeout(function () { watchLive2d((tries || 0) + 1); }, 200);
         })(0);
 
@@ -4023,7 +4023,17 @@
                 } catch (e) {}
             });
             v.addEventListener('error', function () { videoReady = true; }, { once: true });
-            setTimeout(function () { videoReady = true; }, 12000);   // 真出不来也别把人锁住
+            // 兜底不再用"固定 12 秒"，而是"12 秒没有新进展"才放行：
+            // 网速慢但还在下载时继续等，避免没加载好就把加载动画收了。
+            var vWatch = null;
+            var bumpVideoWatch = function () {
+                if (videoReady) return;
+                if (vWatch) clearTimeout(vWatch);
+                vWatch = setTimeout(function () { videoReady = true; }, 12000);
+            };
+            v.addEventListener('progress', bumpVideoWatch);
+            v.addEventListener('timeupdate', bumpVideoWatch);
+            bumpVideoWatch();
         } else {
             videoReady = true;                                        // 省流量 / 减少动态效果
         }
