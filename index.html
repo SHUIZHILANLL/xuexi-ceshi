@@ -1322,6 +1322,37 @@
         }
 
         /* =========================================
+           音乐状态小提示
+           贴在右下角 ♪ 按钮上方。用 opacity 淡入淡出（不占位、不打断阅读），
+           因为播放器默认是收起的，这些"加载中 / 点一下开始播"的提示必须能自己冒出来。
+           ========================================= */
+        .audio-toast {
+            position: fixed;
+            right: 16px;
+            bottom: 76px;
+            z-index: 40;
+            max-width: min(240px, calc(100vw - 32px));
+            padding: 6px 12px;
+            font-size: 0.76rem;
+            line-height: 1.5;
+            color: rgba(244, 237, 255, 0.94);
+            background: rgba(24, 14, 38, 0.9);
+            border: 1px solid rgba(238, 178, 255, 0.28);
+            border-radius: 999px;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        .audio-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =========================================
            目前进行时（个人 VPN 技术实践）
            流程画成"三个节点 + 箭头"，箭头上的字就是数据流说明；
            窄屏自动竖排（箭头转 90 度）。
@@ -2154,6 +2185,9 @@
     <!-- 收起后的小呼出按钮 -->
     <button id="wpAudioShow" type="button" class="wp-audio-mini" title="打开音乐控制">♪</button>
 
+    <!-- 音乐状态小提示（贴在 ♪ 上方）：加载中 / 随机播放中 / 点一下页面开始播放 -->
+    <div class="audio-toast" id="audioToast" role="status" aria-live="polite"></div>
+
     <!-- 站内曲目列表（点“选歌”展开） -->
     <div class="wp-list" id="wpListPanel" data-lenis-prevent hidden>
         <div class="wp-list-head">站内曲库<span id="wpListCount"></span></div>
@@ -2281,8 +2315,8 @@
 
             <div class="now-status">
                 <div class="now-step on">
-                    <strong>正在进行</strong>
-                    申请微软 Azure for Students 认证中 —— 学校还没发教育邮箱，卡在这一步。
+                    <strong>正在进行....</strong>
+                    申请微软 Azure for Students 认证中 —— 学校还没发教育邮箱😡😡😡
                 </div>
                 <div class="now-step">
                     <strong>还差一台服务器</strong>
@@ -2293,7 +2327,7 @@
 
         <!-- Blog Posts Section -->
         <section class="section" id="feed">
-            <h2 class="section-title">最新动向 干了什么我🤖</h2>
+            <h2 class="section-title">最近动向 干了什么我🤖</h2>
             <article class="post-card post-card-bg6 post-card-ru">
                 <p class="post-date">2026 年 10 月 15 日</p>
                 <p class="ru-cn">拿上些种子放进你的口袋吧，这样它们就会在你死后在这里生长开花</p>
@@ -2427,12 +2461,9 @@
             </div>
         </section>
 
-        <!-- 本站用到的项目 -->
+        <!-- 本站用到的github项目 -->
         <section class="section" id="credits">
-            <h2 class="section-title">本站用到的项目🔧</h2>
-            <p class="credits-intro">
-                这个站是个纯静态页面（没有后端），靠下面这些开源项目撑起来 —— 顺手记一笔，也算致谢。
-            </p>
+            <h2 class="section-title">本站用到的项目，开源精神💕</h2>
             <ul class="credits-list">
                 <li class="credit-item">
                     <div class="credit-head">
@@ -3269,6 +3300,81 @@
             analyser.connect(ac.destination);     // 必须接回输出，不然只有曲线没声音
         }
 
+        /* ===== 音乐状态提示 =====
+           两处同步：右下角小气泡 + 播放器面板里的状态文字。
+           播放器默认是收起的，所以"加载中 / 点一下开始播"必须靠气泡自己冒出来。 */
+        var toastEl = document.getElementById('audioToast');
+        var toastTimer = null;
+        function audioHint(text, ms) {
+            if (toastEl) {
+                if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+                if (!text) {
+                    toastEl.classList.remove('show');
+                } else {
+                    toastEl.textContent = text;
+                    toastEl.classList.add('show');
+                    if (ms > 0) {
+                        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, ms);
+                    }
+                }
+            }
+            if (msg && text) msg.textContent = text;
+        }
+
+        var autoTried = {};
+
+        /* 放不出来就换下一首（每首只试一次，试完给句话，不再出现"播放失败"） */
+        function nextTrackFromError() {
+            if (!playlist.length) return;
+            for (var i = 0; i < playlist.length; i++) {
+                if (!autoTried[i]) {
+                    autoTried[i] = 1;
+                    playTrack(playlist[i].src, playlist[i].name);
+                    return;
+                }
+            }
+            audioHint('曲库暂时都放不出来，先逛逛吧', 6000);
+        }
+
+        /* 被浏览器拦了有声自动播放：提示一次，等第一个手势再播 */
+        var gesturing = false;
+        function armGesture() {
+            if (gesturing) return;
+            gesturing = true;
+            var once = function () {
+                window.removeEventListener('pointerdown', once, true);
+                window.removeEventListener('keydown', once, true);
+                window.removeEventListener('touchstart', once, true);
+                gesturing = false;
+                if (audioEl.paused && audioEl.src) {
+                    audioHint('音乐加载中…', 0);
+                    var p = audioEl.play();
+                    if (p && p.catch) p.catch(function (e) { handlePlayError(e); });
+                }
+            };
+            window.addEventListener('pointerdown', once, true);
+            window.addEventListener('keydown', once, true);
+            window.addEventListener('touchstart', once, true);
+        }
+
+        function handlePlayError(e) {
+            var name = (e && e.name) || '';
+            if (name === 'NotAllowedError') {
+                audioHint('点一下页面就开始播放 ♪', 0);
+                armGesture();
+            } else if (name !== 'AbortError') {
+                nextTrackFromError();          // 换源时的正常中断不算错
+            }
+        }
+
+        // 缓冲时提示加载中；真正开始出声时提示曲名
+        audioEl.addEventListener('waiting', function () {
+            if (!audioEl.paused) audioHint('音乐加载中…', 0);
+        });
+        audioEl.addEventListener('playing', function () {
+            audioHint('♪ ' + (titleEl.textContent || '正在播放'), 2600);
+        });
+
         function playTrack(src, name) {
             reset();
             attachElement();
@@ -3276,15 +3382,15 @@
             audioEl.src = src;
             store('wpTrack', index);              // 记住听到哪首
             updateMediaSession(name);             // 更新锁屏信息
+            titleEl.textContent = name || '';
+            audioHint('音乐加载中…', 0);
             var p = audioEl.play();
             if (p && p.then) {
                 p.then(function () {
                     playBtn.textContent = '❚❚';
-                    titleEl.textContent = name || '';
-                    msg.textContent = CAN_ANALYSE ? '网页自己在播' : '本地播放中（曲线需 http 才跟）';
                     highlight();
                 }).catch(function (e) {
-                    msg.textContent = '播放失败：' + (e.message || e.name);
+                    handlePlayError(e);           // 不再显示"播放失败"
                 });
             }
         }
@@ -3485,26 +3591,38 @@
         msg.textContent = CAN_ANALYSE ? '点 ▶ 开始' : '点 ▶ 开始（曲线需 http 才跟）';
         renderList();
 
-        // 恢复上次的：音量、听到哪首、听到哪儿（只装载不自动播放，浏览器本来也会拦）
-        (function restorePlayer() {
+        // 进站随机播一首。
+        // 浏览器的自动播放策略：没有用户手势的有声播放会被拦（NotAllowedError）。
+        // 所以：先随机挑一首试播并提示"音乐加载中…" → 被拦就提示"点一下页面就开始播放"
+        // 并挂一次性手势监听 → 真放不出来就自动换下一首，全程不出现"播放失败"。
+        // 音量沿用上次的；不再恢复上次听到哪首/哪一秒（现在每次进站随机一首）。
+        (function autoplayRandom() {
             var v = read('wpVol');
             if (v != null) {
                 volInput.value = v;
                 audioEl.volume = parseFloat(v);
             }
-            var t = parseInt(read('wpTrack'), 10);
-            var pos = parseInt(read('wpPos'), 10);
-            if (playlist.length && !isNaN(t) && t >= 0 && t < playlist.length) {
-                index = t;
-                audioEl.src = playlist[t].src;
-                titleEl.textContent = playlist[t].name;
-                msg.textContent = '上次听到这儿，点 ▶ 继续';
-                updateMediaSession(playlist[t].name);
-                if (!isNaN(pos) && pos > 5) {
-                    pendingSeekTo = pos;
-                    curEl.textContent = fmtTime(pos);
-                }
-                highlight();
+            if (!playlist.length) {
+                audioHint('还没歌，从列表里挑一首', 5000);
+                return;
+            }
+            audioEl.loop = playlist.length <= 1;
+            var i = Math.floor(Math.random() * playlist.length);
+            index = i;
+            audioEl.src = playlist[i].src;
+            titleEl.textContent = playlist[i].name;
+            updateMediaSession(playlist[i].name);
+            highlight();
+            audioHint('音乐加载中…', 0);
+
+            var p = audioEl.play();
+            if (p && p.then) {
+                p.then(function () {
+                    playBtn.textContent = '❚❚';
+                    highlight();
+                }).catch(function (e) {
+                    handlePlayError(e);
+                });
             }
         })();
 
