@@ -2005,20 +2005,51 @@
         }
 
         .preloader-bar {
+            position: relative;
             width: min(58vw, 320px);
             height: 4px;
-            overflow: hidden;
             background: var(--loader-bar-bg);
             border-radius: 999px;
         }
 
+        /* 进度条：会流动的渐变 + 末端一条像素小鱼（用鼠标光标那张图，同一套像素风） */
         .preloader-bar i {
             display: block;
+            position: relative;
             width: 0;
             height: 100%;
             border-radius: 999px;
-            background: linear-gradient(90deg, #b98cff, #eeb2ff, #ffb7d6);
+            background: linear-gradient(90deg, #b98cff, #eeb2ff, #ffb7d6, #eeb2ff, #b98cff);
+            background-size: 220% 100%;
+            animation: barFlow 2.4s linear infinite;
             transition: width 0.25s ease;
+        }
+
+        @keyframes barFlow {
+            to { background-position: 220% 0; }
+        }
+
+        .preloader-bar i::after {
+            content: "";
+            position: absolute;
+            right: -16px;
+            top: 50%;
+            width: 30px;
+            height: 20px;
+            background: url('cursor-fish.png') no-repeat center / contain;
+            animation: fishBob 1.6s ease-in-out infinite;
+        }
+
+        @keyframes fishBob {
+            0%, 100% { transform: translateY(-62%) rotate(-5deg); }
+            50% { transform: translateY(-38%) rotate(5deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .preloader-bar i,
+            .preloader-bar i::after {
+                animation: none;
+            }
         }
 
         .preloader-pct {
@@ -3034,7 +3065,9 @@
         function markLive() {
             if (videoLive) return;
             videoLive = true;
-            video.classList.add('live');                 // 模糊占位淡出成动态壁纸
+            // 注意：这里**不**加 .live。加载期间视频是在后台缓冲着播的，
+            // 网速慢时画面会一顿一顿 —— 所以这时候只让静态模糊图露出来，
+            // 等整段下载完（加载层里的 checkFull）再淡入壁纸，看到的第一帧就是流畅的。
             if (typeof window.__videoLive === 'function') window.__videoLive();
         }
         //    关键：必须"真的在播"才算 —— 暂停状态下呈现的首帧不算数，
@@ -4022,16 +4055,25 @@
                     if (target > given) { add(target - given); given = target; }
                 } catch (e) {}
             });
-            v.addEventListener('error', function () { videoReady = true; }, { once: true });
+            v.addEventListener('error', function () {
+                videoReady = true;
+                v.classList.add('live');
+            }, { once: true });
 
             // 放行条件之一：整段壁纸**完全下载完**（不只是开始播）。
             // 用 buffered 是否覆盖到结尾来判定；progress/loadeddata/timeupdate/suspend 都会触发检查。
+            // 只有下载完这一刻才给视频加 .live —— 加载期间保持静态模糊图，
+            // 这样你看到的第一帧壁纸就是流畅的，不会一顿一顿。
             var checkFull = function () {
                 if (videoReady) return;
                 try {
                     if (v.buffered.length && v.duration && isFinite(v.duration)) {
                         var end = v.buffered.end(v.buffered.length - 1);
-                        if (end >= v.duration - 0.25) { videoReady = true; }
+                        if (end >= v.duration - 0.25) {
+                            videoReady = true;
+                            v.classList.add('live');
+                            try { v.play(); } catch (e) {}
+                        }
                     }
                 } catch (e) {}
             };
@@ -4048,7 +4090,12 @@
             var bumpVideoWatch = function () {
                 if (videoReady) return;
                 if (vWatch) clearTimeout(vWatch);
-                vWatch = setTimeout(function () { videoReady = true; }, 12000);
+                vWatch = setTimeout(function () {
+                    videoReady = true;
+                    // 兜底放行：不再干等，让壁纸露出来（可能仍会卡，但至少不锁住页面）
+                    v.classList.add('live');
+                    try { v.play(); } catch (e) {}
+                }, 12000);
             };
             v.addEventListener('progress', bumpVideoWatch);
             v.addEventListener('timeupdate', bumpVideoWatch);
