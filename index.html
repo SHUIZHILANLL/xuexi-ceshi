@@ -3601,34 +3601,51 @@
         // 所以：先随机挑一首试播并提示"音乐加载中…" → 被拦就提示"点一下页面就开始播放"
         // 并挂一次性手势监听 → 真放不出来就自动换下一首，全程不出现"播放失败"。
         // 音量沿用上次的；不再恢复上次听到哪首/哪一秒（现在每次进站随机一首）。
+        //
+        // 时机很重要：**等加载层撤掉之后再开始**。一首 mp3 有好几 MB，
+        // 和壁纸视频（1.2MB）同时下会互相抢带宽，首屏反而更慢 —— 这是"加载慢"的主因之一。
         (function autoplayRandom() {
-            var v = read('wpVol');
-            if (v != null) {
-                volInput.value = v;
-                audioEl.volume = parseFloat(v);
-            }
-            if (!playlist.length) {
-                audioHint('还没歌，从列表里挑一首', 5000);
-                return;
-            }
-            audioEl.loop = playlist.length <= 1;
-            var i = Math.floor(Math.random() * playlist.length);
-            index = i;
-            audioEl.src = playlist[i].src;
-            titleEl.textContent = playlist[i].name;
-            updateMediaSession(playlist[i].name);
-            highlight();
-            audioHint('音乐加载中…', 0);
+            function go() {
+                var v = read('wpVol');
+                if (v != null) {
+                    volInput.value = v;
+                    audioEl.volume = parseFloat(v);
+                }
+                if (!playlist.length) {
+                    audioHint('还没歌，从列表里挑一首', 5000);
+                    return;
+                }
+                audioEl.loop = playlist.length <= 1;
+                var i = Math.floor(Math.random() * playlist.length);
+                index = i;
+                audioEl.src = playlist[i].src;
+                titleEl.textContent = playlist[i].name;
+                updateMediaSession(playlist[i].name);
+                highlight();
+                audioHint('音乐加载中…', 0);
 
-            var p = audioEl.play();
-            if (p && p.then) {
-                p.then(function () {
-                    playBtn.textContent = '❚❚';
-                    highlight();
-                }).catch(function (e) {
-                    handlePlayError(e);
-                });
+                var p = audioEl.play();
+                if (p && p.then) {
+                    p.then(function () {
+                        playBtn.textContent = '❚❚';
+                        highlight();
+                    }).catch(function (e) {
+                        handlePlayError(e);
+                    });
+                }
             }
+
+            // 加载层一撤就走；万一那个事件没来（比如被强杀），6 秒后自己兜一次
+            var started = false;
+            function startOnce() {
+                if (started) return;
+                started = true;
+                setTimeout(go, 200);
+            }
+            document.addEventListener('preloader:done', startOnce);
+            setTimeout(function () {
+                if (!document.getElementById('preloader')) startOnce();
+            }, 6000);
         })();
 
         // 部署到 GitHub Pages 后，以 music/manifest.json 为准（本地打开读不到就忽略）
@@ -3663,7 +3680,9 @@
     })();
     </script>
 
-    <!-- 看板娘：不占首屏关键路径 —— 等页面 load 之后再拉（它要下 live2d 库和模型） -->
+    <!-- 看板娘：要下 live2d 库 + 模型（几百 KB）。
+         以前是等 window.load 再 +300ms 才开始，等于白等一段 —— 现在立刻开始，
+         和壁纸视频并行下载，加载层等的那两个条件就能同时满足。 -->
     <script>
     (function () {
         function boot() {
@@ -3672,8 +3691,9 @@
             s.async = true;
             document.body.appendChild(s);
         }
-        if (document.readyState === 'complete') setTimeout(boot, 300);
-        else window.addEventListener('load', function () { setTimeout(boot, 300); });
+        // 等 body 里能塞节点就开跑，不再等 load
+        if (document.body) boot();
+        else document.addEventListener('DOMContentLoaded', boot);
     })();
     </script>
 
