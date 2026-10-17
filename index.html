@@ -2169,12 +2169,14 @@
                 '<div class="preloader-pct">0%</div>';
             document.documentElement.appendChild(el);
 
+            // 硬兜底：就算前面所有判定都失灵，也绝不让加载层永久挡住内容。
+            // 放在 25 秒 —— 比视频/看板娘那两个 20 秒兜底更晚，否则它们根本没机会跑完。
             window.__preloaderKill = setTimeout(function () {
                 var p = document.getElementById('preloader');
                 if (!p) return;
                 p.className = 'preloader done';
                 setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 700);
-            }, 18000);
+            }, 25000);
 
             /* 鼠标光晕也在这里创建：和加载层同一条路 ——
                head 阶段 body 还不存在，挂到 documentElement 上是"能被渲染"的
@@ -3712,17 +3714,30 @@
                 }
             }
 
-            // 加载层一撤就走；万一那个事件没来（比如被强杀），6 秒后自己兜一次
+            // 音乐放在**最后**：加载层撤掉之后，还要等页面 load 完成 + 再空闲 1 秒才开工。
+            // 这样它不会和壁纸视频、看板娘抢带宽（几 MB 的音频最容易把首屏拖慢）。
+            // 万一 load 一直不来（视频卡住等），20 秒后无论如何都启动，不会永远不播。
             var started = false;
             function startOnce() {
                 if (started) return;
                 started = true;
                 setTimeout(go, 200);
             }
-            document.addEventListener('preloader:done', startOnce);
+            function startLast() {
+                if (document.readyState === 'complete') {
+                    setTimeout(startOnce, 1000);
+                } else {
+                    window.addEventListener('load', function () { setTimeout(startOnce, 1000); }, { once: true });
+                }
+            }
+            document.addEventListener('preloader:done', function () {
+                startLast();
+                setTimeout(startOnce, 20000);      // 兜底：20 秒后必须开始
+            });
+            // 万一 preloader:done 都没派发（加载层被强杀），自己兜一次
             setTimeout(function () {
-                if (!document.getElementById('preloader')) startOnce();
-            }, 6000);
+                if (!document.getElementById('preloader')) startLast();
+            }, 8000);
         })();
 
         // 部署到 GitHub Pages 后，以 music/manifest.json 为准（本地打开读不到就忽略）
@@ -4047,7 +4062,7 @@
         // 等不到（比如被网络挡了）也照常放行，不能把人锁在加载页。
         (function watchLive2d(tries) {
             if (document.getElementById('live2d')) { live2dReady = true; return; }
-            if ((tries || 0) > 60) { live2dReady = true; return; }   // 最多等 12 秒，等不到再放行
+            if ((tries || 0) > 100) { live2dReady = true; return; }   // 最多等 20 秒，等不到再放行
             setTimeout(function () { watchLive2d((tries || 0) + 1); }, 200);
         })(0);
 
@@ -4149,7 +4164,7 @@
                     // 兜底放行：不再干等，让壁纸露出来（可能仍会卡，但至少不锁住页面）
                     v.classList.add('live');
                     try { v.play(); } catch (e) {}
-                }, 12000);
+                }, 20000);
             };
             v.addEventListener('progress', bumpVideoWatch);
             v.addEventListener('timeupdate', bumpVideoWatch);
