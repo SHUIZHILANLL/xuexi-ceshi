@@ -3215,7 +3215,12 @@
         window.addEventListener('resize', resize);
 
         function collect(t) {
-            if (analyser) {
+            // 注意：AudioContext 在"没有用户手势"时会被浏览器挂起（state = 'suspended'）。
+            // 这期间 getByteFrequencyData 读到的全是 0 —— 画出来就是一条贴在中线的死线，
+            // 也就是"开头时曲线不随音乐动"。所以这里要求上下文真的在跑（running）才读数据，
+            // 否则退回呼吸态，等第一个手势唤醒上下文后再跟音乐起伏。
+            var live = analyser && audioCtx && audioCtx.state === 'running';
+            if (live) {
                 analyser.getByteFrequencyData(freq);
                 var maxBand = Math.floor(freq.length * 0.5);
                 for (var i = 0; i < BINS; i++) {
@@ -3303,9 +3308,37 @@
 
         function ensureCtx() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') {
+                var r = audioCtx.resume();
+                if (r && r.catch) r.catch(function () {});
+            }
             return audioCtx;
         }
+
+        // 浏览器规定：AudioContext 必须在"用户手势"里才能启动。
+        // 进站自动播放时没有手势，上下文会被挂起 —— 曲线就只能呼吸、不跟音乐。
+        // 所以这里挂一组一次性手势监听：第一次点击/敲键/触摸就把上下文唤醒，
+        // 之后曲线立刻跟着音乐动。（已经 running 了就把监听卸掉。）
+        (function wakeCtxOnGesture() {
+            var opts = { capture: true, passive: true };
+            function off() {
+                window.removeEventListener('pointerdown', wake, true);
+                window.removeEventListener('keydown', wake, true);
+                window.removeEventListener('touchstart', wake, true);
+            }
+            function wake() {
+                if (audioCtx && audioCtx.state === 'running') { off(); return; }
+                if (audioCtx) {
+                    try {
+                        var r = audioCtx.resume();
+                        if (r && r.catch) r.catch(function () {});
+                    } catch (e) {}
+                }
+            }
+            window.addEventListener('pointerdown', wake, opts);
+            window.addEventListener('keydown', wake, opts);
+            window.addEventListener('touchstart', wake, opts);
+        })();
 
         function makeAnalyser() {
             var a = ensureCtx().createAnalyser();
