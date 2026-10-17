@@ -1987,8 +1987,15 @@
             background: var(--loader-bg);
             -webkit-backdrop-filter: blur(12px) saturate(1.1);
             backdrop-filter: blur(12px) saturate(1.1);
+            /* 加载层挂在 html 下，不在 body 里，继承不到 body 的小鱼光标 —— 这里单独给一份 */
+            cursor: url('cursor-fish.png') 3 5, auto;
             opacity: 1;
             transition: opacity 0.55s ease;
+        }
+
+        /* 加载期间把跟鼠猫提到加载层上面（平时是 25，压在面板之下） */
+        html.is-loading #oneko {
+            z-index: 70 !important;
         }
 
         .preloader.done {
@@ -2168,12 +2175,14 @@
                 '<div class="preloader-bar"><i></i><button class="loader-fish" type="button" aria-label="摸摸小鱼"></button></div>' +
                 '<div class="preloader-pct">0%</div>';
             document.documentElement.appendChild(el);
+            document.documentElement.classList.add('is-loading');   // 加载期间把跟鼠猫提到最上面
 
             // 硬兜底：就算前面所有判定都失灵，也绝不让加载层永久挡住内容。
             // 放在 25 秒 —— 比视频/看板娘那两个 20 秒兜底更晚，否则它们根本没机会跑完。
             window.__preloaderKill = setTimeout(function () {
                 var p = document.getElementById('preloader');
                 if (!p) return;
+                document.documentElement.classList.remove('is-loading');   // 别忘了把跟鼠猫放回正常层级
                 p.className = 'preloader done';
                 setTimeout(function () { if (p.parentNode) p.parentNode.removeChild(p); }, 700);
             }, 25000);
@@ -4113,6 +4122,7 @@
 
         function finish() {
             if (finished) return;
+            document.documentElement.classList.remove('is-loading');   // 跟鼠猫回到正常层级
             finished = true;
             if (window.__preloaderKill) clearTimeout(window.__preloaderKill);
             if (bar) bar.style.width = '100%';
