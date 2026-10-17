@@ -3730,6 +3730,9 @@
                 audioEl.loop = playlist.length <= 1;
                 var i = Math.floor(Math.random() * playlist.length);
                 index = i;
+                // 关键：自动播放这条路径原来漏了接分析器，所以曲线只会呼吸、永远不跟音乐。
+                // 这里补上 —— 和 playTrack() / 播放按钮走同一条链路。
+                attachElement();
                 audioEl.src = playlist[i].src;
                 titleEl.textContent = playlist[i].name;
                 updateMediaSession(playlist[i].name);
