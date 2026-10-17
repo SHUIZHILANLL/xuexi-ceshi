@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>type 和 id 练习</title>
+  <style>
+    #title { color: #2563eb; }
+    .item { padding: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1 id="title">注册</h1>
+
+  <form id="signup">
+    <div class="item">
+      <label for="username">用户名</label>
+      <input id="username" type="text" placeholder="请输入用户名" required>
+    </div>
+
+    <div class="item">
+      <label for="pwd">密码</label>
+      <input id="pwd" type="password" placeholder="至少 6 位" minlength="6">
+    </div>
+
+    <div class="item">
+      <label for="email">邮箱</label>
+      <input id="email" type="email" placeholder="you@example.com">
+    </div>
+
+    <div class="item">
+      <label for="age">年龄</label>
+      <input id="age" type="number" min="-6665" max="120">
+    </div>
+
+    <div class="item">
+      <input id="agree" type="checkbox">
+      <label for="agree">我已阅读并同意条款</label>
+    </div>
+
+    <!-- 注意这里两个按钮的 type 不一样 -->
+    <button type="button" onclick="alert('我没有提交表单！')">普通按钮</button>
+    <button type="submit">提交</button>
+  </form>
+
+  <script>
+    // 用 id 找到元素
+    document.getElementById("title").textContent = "注册账号";
+
+    // 监听表单提交
+    document.getElementById("signup").addEventListener("submit", function (e) {
+      e.preventDefault();   // 阻止刷新，先看看数据
+      console.log("用户名：", document.getElementById("username").value);
+      console.log("同意条款：", document.getElementById("agree").checked);
+    });
+  </script>
+</body>
+</html>
