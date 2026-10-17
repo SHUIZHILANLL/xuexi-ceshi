@@ -4023,8 +4023,27 @@
                 } catch (e) {}
             });
             v.addEventListener('error', function () { videoReady = true; }, { once: true });
-            // 兜底不再用"固定 12 秒"，而是"12 秒没有新进展"才放行：
-            // 网速慢但还在下载时继续等，避免没加载好就把加载动画收了。
+
+            // 放行条件之一：整段壁纸**完全下载完**（不只是开始播）。
+            // 用 buffered 是否覆盖到结尾来判定；progress/loadeddata/timeupdate/suspend 都会触发检查。
+            var checkFull = function () {
+                if (videoReady) return;
+                try {
+                    if (v.buffered.length && v.duration && isFinite(v.duration)) {
+                        var end = v.buffered.end(v.buffered.length - 1);
+                        if (end >= v.duration - 0.25) { videoReady = true; }
+                    }
+                } catch (e) {}
+            };
+            v.addEventListener('progress', checkFull);
+            v.addEventListener('loadeddata', checkFull);
+            v.addEventListener('timeupdate', checkFull);
+            v.addEventListener('suspend', checkFull);
+            checkFull();
+
+            // 兜底不再用"固定 12 秒"，而是"12 秒没有新进展（没收到 progress）」才放行：
+            // 网速慢但还在下载时继续等；万一浏览器缓存策略导致 buffered 永远到不了结尾，
+            // 下载停了 12 秒后也不再干等。
             var vWatch = null;
             var bumpVideoWatch = function () {
                 if (videoReady) return;
@@ -4038,9 +4057,10 @@
             videoReady = true;                                        // 省流量 / 减少动态效果
         }
 
-        // 视频脚本画完首帧会调这里；如果它在本段之前就已经画完了，用查询函数补一次
-        window.__videoLive = function () { videoReady = true; };
-        if (typeof window.__videoIsLive === 'function' && window.__videoIsLive()) videoReady = true;
+        // 画面出来了（.live 淡入）只是视觉效果，不再作为放行条件 ——
+        // 现在要求整段视频下载完成（见上面的 checkFull）。
+        window.__videoLive = function () {};
+        if (typeof window.__videoIsLive === 'function' && window.__videoIsLive()) checkFull && checkFull();
 
         // 立刻开始判定（不要挂在 window.load 上 —— load 本身也在等视频）
         // 放行条件：动态背景出来了 **并且** 看板娘也出来了
