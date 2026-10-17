@@ -4075,9 +4075,26 @@
                 });
             }
 
+            // 真正启动引导：启动后 1.6 秒检查一次浮层是不是真的出现在屏幕里。
+            // 手机上出现过"遮罩盖住全屏、浮层却被挤到屏幕外"的情况 —— 关不掉，整页全白。
+            // 只要浮层没正常显示，就立刻撤掉，绝不让那层遮罩把页面盖死。
+            function driveSafely() {
+                if (!tour) return;
+                tour.drive();
+                setTimeout(function () {
+                    var pop = document.querySelector('.driver-popover');
+                    var r = pop ? pop.getBoundingClientRect() : null;
+                    var ok = r && r.width > 40 && r.bottom > 8 && r.top < window.innerHeight - 8 &&
+                             r.right > 8 && r.left < window.innerWidth - 8;
+                    if (!ok) {
+                        try { tour.destroy(); } catch (e) {}
+                    }
+                }, 1600);
+            }
+
             // ===== 常驻入口：导航上的 ❓ 按钮 / 控制台 startTour() =====
             window.startTour = function () {
-                ensureTour(function () { if (tour) tour.drive(); });
+                ensureTour(function () { driveSafely(); });
             };
             var helpBtn = document.getElementById('tourBtn');
             if (helpBtn) {
@@ -4087,7 +4104,10 @@
             // ===== 首次访问自动走一遍 =====
             // 时机由加载层控制：它在淡出之前会派发 preloader:done，
             // 于是顺序是「看板娘出来 -> 引导浮层出来 -> 加载动画结束」
+            // 手机上不自动弹：小屏上浮层容易被挤到屏幕外、把页面盖死（实测出现过）。
+            // 想在小屏看，点导航上的 ❓ 手动触发，那条路径带自动撤销的兜底。
             if (seen) return;
+            if (window.innerWidth < 820) return;
 
             var fired = false;
             function autoStart() {
@@ -4096,7 +4116,7 @@
                 ensureTour(function () {
                     if (!tour) return;
                     try { localStorage.setItem(KEY, '1'); } catch (e) {}   // 一开始就记下，刷新不重复
-                    tour.drive();
+                    driveSafely();
                 });
             }
 
