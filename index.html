@@ -89,7 +89,7 @@
             color: var(--text);
             /* bg-blur.webp 是视频第一帧压出来的模糊图：
                视频还没出来时先用它当底色，出来之后由 .bg-video 淡入盖上去 */
-            background: #14101c url('bg-blur.webp') no-repeat center center fixed;
+            background: #14101c url('bg-poster.webp') no-repeat center center fixed;
             background-size: cover;
             /* 像素小鱼干光标（和染粉后的跟鼠猫同一套像素风）。
                热点 39,12 = 鱼嘴尖；链接触发的 pointer 手势仍然保留，
@@ -2029,25 +2029,55 @@
             to { background-position: 220% 0; }
         }
 
-        .preloader-bar i::after {
-            content: "";
+        /* 进度条末端那条小鱼：真的 <button>，可以被摸/被戳 */
+        .loader-fish {
             position: absolute;
-            right: -16px;
+            left: var(--p, 0%);
             top: 50%;
-            width: 30px;
-            height: 20px;
+            width: 32px;
+            height: 22px;
+            margin: 0;
+            padding: 0;
+            border: 0;
             background: url('cursor-fish.png') no-repeat center / contain;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
             animation: fishBob 1.6s ease-in-out infinite;
+            transition: filter 0.2s ease, opacity 0.2s ease;
+            z-index: 2;
+        }
+
+        .loader-fish:hover {
+            filter: drop-shadow(0 0 6px rgba(238, 178, 255, 0.85)) brightness(1.12);
+        }
+
+        .loader-fish:focus-visible {
+            outline: 2px solid #eeb2ff;
+            outline-offset: 3px;
+        }
+
+        /* 被戳一下：蹦起来转一圈 */
+        .loader-fish.jump {
+            animation: fishJump 0.55s cubic-bezier(0.3, -0.4, 0.4, 1.4);
         }
 
         @keyframes fishBob {
-            0%, 100% { transform: translateY(-62%) rotate(-5deg); }
-            50% { transform: translateY(-38%) rotate(5deg); }
+            0%, 100% { transform: translate(-50%, -62%) rotate(-6deg); }
+            50% { transform: translate(-50%, -38%) rotate(6deg); }
+        }
+
+        @keyframes fishJump {
+            0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+            45% { transform: translate(-50%, -180%) rotate(180deg) scale(1.25); }
+            100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); }
         }
 
         @media (prefers-reduced-motion: reduce) {
             .preloader-bar i,
-            .preloader-bar i::after {
+            .loader-fish {
+                animation: none;
+            }
+            .loader-fish.jump {
                 animation: none;
             }
         }
@@ -2135,7 +2165,7 @@
             el.setAttribute('aria-hidden', 'true');
             el.innerHTML =
                 '<div class="preloader-text">LOADING…</div>' +
-                '<div class="preloader-bar"><i></i></div>' +
+                '<div class="preloader-bar"><i></i><button class="loader-fish" type="button" aria-label="摸摸小鱼"></button></div>' +
                 '<div class="preloader-pct">0%</div>';
             document.documentElement.appendChild(el);
 
@@ -2194,7 +2224,7 @@
          poster 用的是 184 字节的模糊占位图（由视频第一帧生成），
          视频真正画出第一帧后由 JS 加 .live 淡入，实现"模糊 → 动态"的过渡 -->
     <video class="bg-video" id="bgVideo" autoplay muted loop playsinline preload="none"
-           poster="bg-blur.webp" aria-hidden="true" tabindex="-1">
+           poster="bg-poster.webp" aria-hidden="true" tabindex="-1">
         <source src="bg-video.mp4" type="video/mp4">
     </video>
     <div class="bg-veil" aria-hidden="true"></div>
@@ -3983,12 +4013,35 @@
         if (!el) return;
 
         var bar = el.querySelector('.preloader-bar i');
+        var barWrap = el.querySelector('.preloader-bar');
+        var fishBtn = el.querySelector('.loader-fish');
+        var loadText = el.querySelector('.preloader-text');
         var pct = el.querySelector('.preloader-pct');
         var done = 0;
         var total = 1;
         var finished = false;
         var videoReady = false;
         var live2dReady = false;      // 看板娘是否已经出来（放行的第二个条件）
+
+        // 摸一摸那条小鱼：蹦一下，顺手吐槽一句
+        if (fishBtn) {
+            var fishTease = ['别戳我，鱼在游…', '痒！', '再戳就跑了', '你是不是很闲', '鱼：？？？', '好好等着'];
+            var teaseAt = 0;
+            fishBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                fishBtn.classList.remove('jump');
+                void fishBtn.offsetWidth;          // 强制重排，让动画能重复触发
+                fishBtn.classList.add('jump');
+                if (loadText) {
+                    loadText.textContent = fishTease[teaseAt % fishTease.length];
+                    teaseAt++;
+                }
+                setTimeout(function () {
+                    fishBtn.classList.remove('jump');
+                    if (loadText && !finished) loadText.textContent = 'LOADING…';
+                }, 900);
+            });
+        }
 
         // 等看板娘出现：它是页面 load 之后才加载的。最多等 6 秒，
         // 等不到（比如被网络挡了）也照常放行，不能把人锁在加载页。
@@ -4001,6 +4054,7 @@
         function draw() {
             var p = Math.max(0, Math.min(100, Math.round(done / total * 100)));
             if (bar) bar.style.width = p + '%';
+            if (barWrap) barWrap.style.setProperty('--p', p + '%');   // 小鱼跟着进度游
             if (pct) pct.textContent = p + '%';
         }
 
