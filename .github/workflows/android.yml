@@ -2,8 +2,12 @@ name: android-apk
 
 # 为什么放在 GitHub 上跑：
 # 本地没有 Java / Gradle / Android SDK，装齐要下好几个 GB；
-# 而 GitHub 的 ubuntu 跑手机自带 JDK 17 + Android SDK，编一个 debug APK 只要两三分钟。
-# 编好的 APK 会作为 artifact 挂在这次运行下面，手机点一下就能下。
+# 而 GitHub 的 ubuntu 跑手机自带 JDK 17 + Android SDK（含 platform 34），
+# 编一个 debug APK 只要两三分钟。编好的 APK 作为 artifact 挂在这几次运行下面。
+#
+# 注意：这里刻意**不**用 android-actions/setup-android ——
+# 它会自己去下 command-line tools，第一次跑就挂在下载/版本上；
+# 直接用运行器预装的 SDK（ANDROID_HOME 已设好、licenses 已接受）更稳。
 
 on:
   workflow_dispatch:
@@ -30,11 +34,12 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses
-        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+      - name: Show preinstalled Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls "$ANDROID_HOME/platforms" || true
+          ls "$ANDROID_HOME/build-tools" || true
 
       - name: Build debug APK
         working-directory: android
