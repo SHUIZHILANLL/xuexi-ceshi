@@ -1,0 +1,36 @@
+{
+  "name": "沈理国工 闽越王",
+  "short_name": "闽越王",
+  "description": "一条沈理国工计科组的个人站：动态壁纸、看板娘、音乐盒与随笔。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "id": "/xuexi-ceshi/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#14101c",
+  "theme_color": "#1a1026",
+  "categories": ["personal", "blog"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

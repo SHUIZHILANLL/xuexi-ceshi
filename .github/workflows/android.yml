@@ -1,0 +1,53 @@
+name: android-apk
+
+# 为什么放在 GitHub 上跑：
+# 本地没有 Java / Gradle / Android SDK，装齐要下好几个 GB；
+# 而 GitHub 的 ubuntu 跑手机自带 JDK 17 + Android SDK，编一个 debug APK 只要两三分钟。
+# 编好的 APK 会作为 artifact 挂在这次运行下面，手机点一下就能下。
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept licenses
+        run: yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+      - name: Build debug APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Show output
+        working-directory: android
+        run: ls -lh app/build/outputs/apk/debug/ || true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sheci-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 90

@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a1026">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="闽越王">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
     <title>神🍐国工 闽越王 | 个人介绍网站</title>
     <style>
         * {
@@ -4385,5 +4391,18 @@
 
     <!-- 鼠标光晕的创建放在 <head> 的脚本里了（那里 appendChild 一定会成功），
          这里不再重复创建 -->
+    <!-- PWA：把站点装成手机 App（Android/桌面 Chrome 会弹"安装"；iOS 用"添加到主屏幕"） -->
+    <script>
+    (function () {
+        if (!('serviceWorker' in navigator)) return;
+        var okProto = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!okProto) return;
+        window.addEventListener('load', function () {
+            Navigator.prototype.serviceWorker;
+            navigator.serviceWorker.register('sw.js').catch(function () { /* 装不上也不影响正常浏览 */ });
+        });
+    })();
+    </script>
+
 </body>
 </html>
