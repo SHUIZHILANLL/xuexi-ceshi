@@ -4404,5 +4404,67 @@
     })();
     </script>
 
+    <!-- 看板娘的场景台词：滚到某个板块就说一句（每个板块只说一次）
+         插件（live2d-widget）只支持"悬停某元素"的台词，不支持滚动触发，
+         所以这里直接复用它的气泡元素 #waifu-tips（同一套样式，不另造 UI）。 -->
+    <script>
+    (function () {
+        var LINES = {
+            about: ['这边是主人自己写的哦～要偷偷看吗？', '想认识主人的话，从这一页开始就对啦！'],
+            works: ['哇，这些小徽章都是主人一点点攒的耶！', '成就墙～我最喜欢看主人被夸了。'],
+            now: ['主人最近在跟网络搏斗呢…进度条慢慢爬～', '还差一台服务器，主人有点发愁。'],
+            repos: ['这些仓库都是主人亲手写的，要不要去看看？', '代码都公开的哦，随便翻～'],
+            feed: ['今天的新动态！我还没偷看呢…', '主人写东西的时候可认真了。'],
+            contact: ['想找主人的话，这里最直接啦～', '联系方式在这儿，别乱传哦。'],
+            credits: ['站里用到的开源项目都在这儿，谢谢它们～', '没有它们就没有我啦！'],
+            comments: ['留言板！写点什么都可以，主人都会看的～', '要不要留下你的名字呀？']
+        };
+
+        function say(text, ms) {
+            var box = document.getElementById('waifu-tips');
+            if (!box) return false;
+            box.innerHTML = text;
+            box.classList.add('waifu-tips-active');
+            clearTimeout(say._t);
+            say._t = setTimeout(function () { box.classList.remove('waifu-tips-active'); }, ms || 5200);
+            return true;
+        }
+        window.__waifuSay = say;      // 其它脚本/调试也能用
+
+        if (!('IntersectionObserver' in window)) return;
+
+        var said = {};
+        var io = new IntersectionObserver(function (entries) {
+            for (var k = 0; k < entries.length; k++) {
+                var en = entries[k];
+                if (!en.isIntersecting) continue;
+                var id = en.target.id;
+                if (!id || said[id] || !LINES[id]) continue;
+                if (!document.getElementById('waifu-tips')) continue;   // 看板娘还没出来就先等
+                said[id] = true;
+                var arr = LINES[id];
+                (function (line) {
+                    setTimeout(function () { say(line); }, 420);
+                })(arr[Math.floor(Math.random() * arr.length)]);
+            }
+        }, { threshold: 0.35 });
+
+        function observeAll() {
+            Object.keys(LINES).forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) io.observe(el);
+            });
+        }
+
+        // 等看板娘（#waifu-tips）出现再开始观察，否则首屏那几个板块会被漏掉
+        (function waitWaifu(tries) {
+            if (document.getElementById('waifu-tips')) { observeAll(); return; }
+            if ((tries || 0) > 75) return;                    // 约 15 秒还等不到就算了
+            setTimeout(function () { waitWaifu((tries || 0) + 1); }, 200);
+        })(0);
+    })();
+    </script>
+
 </body>
+
 </html>
